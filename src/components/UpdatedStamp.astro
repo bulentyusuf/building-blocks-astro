@@ -15,5 +15,7 @@ const label = german ? "Aktualisiert am " : "Updated ";
 <span
   lang={german ? GERMAN_LOCALE : undefined}
   class="inline-flex min-h-7.5 items-center rounded-md border-2 border-outline px-2.5 font-ui text-xs font-bold tracking-[0.06em] uppercase tabular-nums outline-1 outline-offset-2 outline-outline"
-  >{label}<time datetime={date}>{formatLongDate(date, german)}</time></span
 >
+  {label}
+  <time datetime={date}>{formatLongDate(date, german)}</time>
+</span>

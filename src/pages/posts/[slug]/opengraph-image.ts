@@ -11,7 +11,10 @@ import type { ListPost } from "../../../lib/types";
 // because the image renderer cannot run in the runtime that renders pages.
 export const getStaticPaths = (async () => {
   const posts = await getAllPosts(false);
-  return posts.map((post) => ({ params: { slug: post.slug }, props: { post } }));
+  return posts.map((post) => ({
+    params: { slug: post.slug },
+    props: { post },
+  }));
 }) satisfies GetStaticPaths;
 
 export const GET: APIRoute<{ post: ListPost }> = ({ props: { post } }) =>

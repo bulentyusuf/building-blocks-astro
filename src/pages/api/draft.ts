@@ -47,8 +47,5 @@ export const GET: APIRoute = async ({ url, cookies, redirect }) => {
     ...PREVIEW_COOKIE_OPTIONS,
     maxAge: session.maxAge,
   });
-  return redirect(
-    `${PREVIEW_PATH}${german ? "/de" : ""}/posts/${slug}`,
-    307,
-  );
+  return redirect(`${PREVIEW_PATH}${german ? "/de" : ""}/posts/${slug}`, 307);
 };

@@ -19,36 +19,33 @@ const title = `Tags | ${SITE_TITLE}`;
     crumbs={[{ label: "Home", href: "/" }, { label: "Tags" }]}
     heading="Tags"
   >
-    {
-      groups.length === 0 ? (
-        <p class="text-lg text-brand-muted">
-          No tags yet. A tag appears here once {MIN_POSTS_PER_TAG} posts carry
-          it.
-        </p>
-      ) : (
-        // An index, one row per tag, each tag page holding its posts.
-        <div data-pagefind-ignore>
-          <ul class="overflow-hidden rounded-container border-2 border-edge-quiet bg-card">
-            {groups.map(({ tag, posts }) => (
-              // The id keeps old /tags#slug links landing on their row.
-              <li id={tag.slug} class="even:bg-brand-bg">
-                <a
-                  href={`/tags/${tag.slug}`}
-                  class="group flex min-h-11 items-baseline justify-between gap-x-4 px-5 py-3.5 sm:px-7"
-                >
-                  <span class="font-ui text-xl leading-snug font-bold transition-colors duration-200 group-hover:text-brand-crimson">
-                    #{tag.name}
-                  </span>
-                  <span class="shrink-0 font-mono text-sm font-medium text-brand-muted">
-                    <span aria-hidden="true">// </span>
-                    {`${posts.length} ${posts.length === 1 ? "post" : "posts"}`}
-                  </span>
-                </a>
-              </li>
-            ))}
-          </ul>
-        </div>
-      )
-    }
+    {groups.length === 0 ? (
+      <p class="text-lg text-brand-muted">
+        No tags yet. A tag appears here once {MIN_POSTS_PER_TAG} posts carry it.
+      </p>
+    ) : (
+      // An index, one row per tag, each tag page holding its posts.
+      <div data-pagefind-ignore>
+        <ul class="overflow-hidden rounded-container border-2 border-edge-quiet bg-card">
+          {groups.map(({ tag, posts }) => (
+            // The id keeps old /tags#slug links landing on their row.
+            <li id={tag.slug} class="even:bg-brand-bg">
+              <a
+                href={`/tags/${tag.slug}`}
+                class="group flex min-h-11 items-baseline justify-between gap-x-4 px-5 py-3.5 sm:px-7"
+              >
+                <span class="font-ui text-xl leading-snug font-bold transition-colors duration-200 group-hover:text-brand-crimson">
+                  #{tag.name}
+                </span>
+                <span class="shrink-0 font-mono text-sm font-medium text-brand-muted">
+                  <span aria-hidden="true">// </span>
+                  {`${posts.length} ${posts.length === 1 ? "post" : "posts"}`}
+                </span>
+              </a>
+            </li>
+          ))}
+        </ul>
+      </div>
+    )}
   </WidePage>
 </Layout>

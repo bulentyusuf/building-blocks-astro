@@ -34,21 +34,26 @@ const closing = across === "closing";
     class="aspect-3/2"
   />
   <div
-    class={closing
-      ? "flex flex-col gap-3.5 px-4.5 md:max-xl:self-center md:max-xl:py-5 md:max-xl:pl-0"
-      : "flex flex-col gap-3.5 px-4.5"}
+    class={
+      closing
+        ? "flex flex-col gap-3.5 px-4.5 md:max-xl:self-center md:max-xl:py-5 md:max-xl:pl-0"
+        : "flex flex-col gap-3.5 px-4.5"
+    }
   >
     <CardMeta post={post} class="text-sm" showStrand={showStrand} />
     <h3
-      class={across !== 2
-        ? "text-2xl font-[800] leading-[1.05] text-balance md:text-[1.875rem] xl:text-2xl"
-        : "text-2xl font-[800] leading-[1.05] text-balance md:text-[1.875rem]"}
+      class={
+        across !== 2
+          ? "text-2xl font-[800] leading-[1.05] text-balance md:text-[1.875rem] xl:text-2xl"
+          : "text-2xl font-[800] leading-[1.05] text-balance md:text-[1.875rem]"
+      }
     >
       <a
         href={`/posts/${post.slug}`}
         class="after:absolute after:inset-0 after:content-[''] hover:text-brand-crimson transition-colors duration-200"
-        >{widont(post.title)}</a
       >
+        {widont(post.title)}
+      </a>
     </h3>
     <p class="text-base leading-relaxed text-pretty md:text-[1.0625rem]">
       {widont(post.excerpt)}

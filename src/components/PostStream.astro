@@ -34,69 +34,63 @@ const cardAcross = (i: number) =>
   !five ? across : i < 2 ? 2 : i === 4 ? "closing" : 3;
 ---
 
-{
-  latest && (
-    <section class="mt-4">
-      <Label>latest post</Label>
-      <FeatureCard
-        post={latest}
-        tags={postTags(latest).filter((t) => visibleTags.has(t.slug))}
-        showStrand={showStrand}
-      />
-    </section>
-  )
-}
-{
-  previous.length > 0 && (
-    <section class="mt-16">
-      <Label>previous posts</Label>
-      <ul
-        class={
-          five
-            ? "grid gap-8 md:grid-cols-2 md:gap-9 xl:grid-cols-6"
-            : across === 3
-              ? "grid gap-8 md:grid-cols-2 md:gap-9 xl:grid-cols-3"
-              : "grid gap-8 md:grid-cols-2 md:gap-9"
-        }
-      >
-        {previous.map((post, i) => (
-          <li
-            class={
-              !five
-                ? "flex"
-                : i < 2
-                  ? "flex xl:col-span-3"
-                  : i === 4
-                    ? "flex md:col-span-2 xl:col-span-2"
-                    : "flex xl:col-span-2"
-            }
-          >
-            <PostCard
-              post={post}
-              showStrand={showStrand}
-              across={cardAcross(i)}
-            />
-          </li>
-        ))}
-      </ul>
-    </section>
-  )
-}
-{
-  older.length > 0 && (
-    <section class="mt-16">
-      <Label>older posts</Label>
-      {/* A list panel: read, not pressed, so the quiet edge. */}
-      <ul class="overflow-hidden rounded-container border-2 border-edge-quiet bg-card">
-        {older.map((post) => (
-          <PostRow
+{latest && (
+  <section class="mt-4">
+    <Label>latest post</Label>
+    <FeatureCard
+      post={latest}
+      tags={postTags(latest).filter((t) => visibleTags.has(t.slug))}
+      showStrand={showStrand}
+    />
+  </section>
+)}
+{previous.length > 0 && (
+  <section class="mt-16">
+    <Label>previous posts</Label>
+    <ul
+      class={
+        five
+          ? "grid gap-8 md:grid-cols-2 md:gap-9 xl:grid-cols-6"
+          : across === 3
+            ? "grid gap-8 md:grid-cols-2 md:gap-9 xl:grid-cols-3"
+            : "grid gap-8 md:grid-cols-2 md:gap-9"
+      }
+    >
+      {previous.map((post, i) => (
+        <li
+          class={
+            !five
+              ? "flex"
+              : i < 2
+                ? "flex xl:col-span-3"
+                : i === 4
+                  ? "flex md:col-span-2 xl:col-span-2"
+                  : "flex xl:col-span-2"
+          }
+        >
+          <PostCard
             post={post}
-            german={germanSlugs?.has(post.slug) ?? false}
-            date="long"
             showStrand={showStrand}
+            across={cardAcross(i)}
           />
-        ))}
-      </ul>
-    </section>
-  )
-}
+        </li>
+      ))}
+    </ul>
+  </section>
+)}
+{older.length > 0 && (
+  <section class="mt-16">
+    <Label>older posts</Label>
+    {/* A list panel: read, not pressed, so the quiet edge. */}
+    <ul class="overflow-hidden rounded-container border-2 border-edge-quiet bg-card">
+      {older.map((post) => (
+        <PostRow
+          post={post}
+          german={germanSlugs?.has(post.slug) ?? false}
+          date="long"
+          showStrand={showStrand}
+        />
+      ))}
+    </ul>
+  </section>
+)}

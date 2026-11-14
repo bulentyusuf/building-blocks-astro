@@ -109,7 +109,7 @@ can. No UI framework ships to the browser.
 - **One announced link per card, one description per figure.** A figure's
   `alt` is the asset's title, its caption the description.
 - **A scroll region's accessible name is its position** (`Table 2`, `Code
-  block 2`), or a code block's filename.
+block 2`), or a code block's filename.
 - **Standalone controls are 44px to tap on a touch screen.** A mouse keeps
   24px. Links inside a sentence are exempt.
 - **The skip link's target, `<main id="main">`, carries `tabindex="-1"`.**

@@ -61,12 +61,14 @@ describe("sitemapPaths", () => {
       "https://a.example/s1.xml":
         "<urlset><url><loc>https://a.example/about</loc></url></urlset>",
     });
-    expect(await sitemapPaths("https://a.example", fetcher)).toEqual(["/about"]);
+    expect(await sitemapPaths("https://a.example", fetcher)).toEqual([
+      "/about",
+    ]);
   });
 
   it("fails loudly when there is no sitemap, rather than checking nothing", async () => {
-    await expect(sitemapPaths("https://a.example", respond({}))).rejects.toThrow(
-      /404/,
-    );
+    await expect(
+      sitemapPaths("https://a.example", respond({})),
+    ).rejects.toThrow(/404/);
   });
 });

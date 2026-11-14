@@ -71,7 +71,10 @@ async function probe(origin, pathname) {
       location: normaliseLocation(response.headers.get("location"), origin),
     };
   } catch (cause) {
-    return { status: `error: ${cause.cause?.code ?? cause.message}`, location: null };
+    return {
+      status: `error: ${cause.cause?.code ?? cause.message}`,
+      location: null,
+    };
   }
 }
 

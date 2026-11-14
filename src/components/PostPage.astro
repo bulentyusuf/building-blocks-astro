@@ -67,12 +67,10 @@ const languageLink = german
   preview={preview}
 >
   <Fragment slot="social">
-    {
-      translated &&
-        Object.entries(postLanguageAlternates(slug)).map(([code, href]) => (
-          <link rel="alternate" hreflang={code} href={href} />
-        ))
-    }
+    {translated &&
+      Object.entries(postLanguageAlternates(slug)).map(([code, href]) => (
+        <link rel="alternate" hreflang={code} href={href} />
+      ))}
     <meta property="og:title" content={post.title} />
     <meta property="og:description" content={post.excerpt} />
     <meta property="og:url" content={canonical} />
@@ -91,7 +89,9 @@ const languageLink = german
       property="article:modified_time"
       content={post.updatedDate ?? post.date}
     />
-    {authorUrls.map((url) => <meta property="article:author" content={url} />)}
+    {authorUrls.map((url) => (
+      <meta property="article:author" content={url} />
+    ))}
     <meta name="twitter:card" content="summary_large_image" />
     <meta name="twitter:title" content={post.title} />
     <meta name="twitter:description" content={post.excerpt} />

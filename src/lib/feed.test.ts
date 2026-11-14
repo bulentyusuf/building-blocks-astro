@@ -25,14 +25,18 @@ const locs = (xml: string) =>
 
 describe("the feed", () => {
   it("credits every author and publishes no email address", () => {
-    const xml = feedXml([post("a", { authorsCollection: authors("Ann", "Bo") })]);
+    const xml = feedXml([
+      post("a", { authorsCollection: authors("Ann", "Bo") }),
+    ]);
     expect(xml.match(/<dc:creator>/g)).toHaveLength(2);
     expect(xml).toContain("<dc:creator>Ann</dc:creator>");
     expect(xml).not.toContain("<author>");
   });
 
   it("escapes what a title or excerpt may hold", () => {
-    const xml = feedXml([post("a", { title: "Q&A <b>", excerpt: "It's \"x\"" })]);
+    const xml = feedXml([
+      post("a", { title: "Q&A <b>", excerpt: 'It\'s "x"' }),
+    ]);
     expect(xml).toContain("<title>Q&amp;A &lt;b&gt;</title>");
     expect(xml).toContain("It&apos;s &quot;x&quot;");
   });
@@ -67,7 +71,13 @@ describe("the sitemap", () => {
   const xml = sitemapXml({
     posts,
     pages: [
-      { slug: "about", sys: { publishedAt: "2026-02-02T00:00:00.000Z", firstPublishedAt: null } },
+      {
+        slug: "about",
+        sys: {
+          publishedAt: "2026-02-02T00:00:00.000Z",
+          firstPublishedAt: null,
+        },
+      },
       { slug: "unrouted", sys: { publishedAt: null, firstPublishedAt: null } },
     ],
     categories: [

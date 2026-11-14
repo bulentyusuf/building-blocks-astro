@@ -106,15 +106,13 @@ const strand = currentStrand(
       <meta property="og:site_name" content={SITE_TITLE} />
       <meta property="og:locale" content={DEFAULT_OG_LOCALE} />
       <meta property="og:image" content={cardImage} />
-      {
-        !social?.image && (
-          <>
-            <meta property="og:image:width" content="1200" />
-            <meta property="og:image:height" content="630" />
-            <meta property="og:image:alt" content={SITE_TITLE} />
-          </>
-        )
-      }
+      {!social?.image && (
+        <>
+          <meta property="og:image:width" content="1200" />
+          <meta property="og:image:height" content="630" />
+          <meta property="og:image:alt" content={SITE_TITLE} />
+        </>
+      )}
       <meta property="og:type" content="website" />
       <meta name="twitter:card" content="summary_large_image" />
       <meta
@@ -135,31 +133,30 @@ const strand = currentStrand(
     <a
       href="#main"
       class="sr-only focus:not-sr-only focus:absolute focus:left-4 focus:top-2 focus:z-[100] focus:rounded-md focus:bg-brand-dark focus:px-4 focus:py-2 focus:text-sm focus:font-bold focus:text-brand-bg"
-      >Skip to content</a
     >
+      Skip to content
+    </a>
     <Header strand={strand} />
     <!-- Focusable, for browsers that do not move focus on a fragment jump. -->
     <main id="main" tabindex="-1" class="grow">
       <slot />
     </main>
     <Footer authors={authors} />
-    {
-      preview && (
-        // A two-tone ring: crimson would vanish on the button's own fill.
-        <form
-          method="post"
-          action="/api/exit-preview"
-          class="fixed top-20 right-5 z-40"
+    {preview && (
+      // A two-tone ring: crimson would vanish on the button's own fill.
+      <form
+        method="post"
+        action="/api/exit-preview"
+        class="fixed top-20 right-5 z-40"
+      >
+        <button
+          type="submit"
+          class="bg-brand-crimson text-white px-3 py-1.5 rounded-md text-sm font-bold shadow-md hover:opacity-90 transition-opacity duration-200 focus:outline-hidden focus-visible:ring-2 focus-visible:ring-white focus-visible:ring-offset-2 focus-visible:ring-offset-surface-dark"
         >
-          <button
-            type="submit"
-            class="bg-brand-crimson text-white px-3 py-1.5 rounded-md text-sm font-bold shadow-md hover:opacity-90 transition-opacity duration-200 focus:outline-hidden focus-visible:ring-2 focus-visible:ring-white focus-visible:ring-offset-2 focus-visible:ring-offset-surface-dark"
-          >
-            Exit preview
-          </button>
-        </form>
-      )
-    }
+          Exit preview
+        </button>
+      </form>
+    )}
     <BackToTop />
   </body>
 </html>

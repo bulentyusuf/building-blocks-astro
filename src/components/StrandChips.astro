@@ -35,32 +35,32 @@ const all = current?.slug === "all";
       all
         ? `${pressed} bg-[color-mix(in_oklab,var(--color-brand-dark)_5%,var(--color-brand-bg))]`
         : `${raised} shadow-[4px_4px_0_var(--color-brand-crimson)]`,
-    ]}>All</a
+    ]}
   >
-  {
-    STRANDS.map((strand) => {
-      const on = current?.slug === strand.slug;
-      return (
-        <a
-          href={`/categories/${strand.slug}`}
-          aria-current={on ? mark : undefined}
-          class:list={[
-            chip,
-            "md:pl-3",
-            on
-              ? `${pressed} ${strand.fill} text-on-strand`
-              : `${raised} ${strand.shadow}`,
-          ]}
-        >
-          <span
-            aria-hidden="true"
-            class:list={[dot, on ? "bg-on-strand" : strand.fill]}
-          />
-          {strand.label}
-        </a>
-      );
-    })
-  }
+    All
+  </a>
+  {STRANDS.map((strand) => {
+    const on = current?.slug === strand.slug;
+    return (
+      <a
+        href={`/categories/${strand.slug}`}
+        aria-current={on ? mark : undefined}
+        class:list={[
+          chip,
+          "md:pl-3",
+          on
+            ? `${pressed} ${strand.fill} text-on-strand`
+            : `${raised} ${strand.shadow}`,
+        ]}
+      >
+        <span
+          aria-hidden="true"
+          class:list={[dot, on ? "bg-on-strand" : strand.fill]}
+        />
+        {strand.label}
+      </a>
+    );
+  })}
 </nav>
 
 <script>

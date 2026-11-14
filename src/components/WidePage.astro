@@ -13,11 +13,11 @@ const { crumbs, heading } = Astro.props;
 <div class="max-w-frame mx-auto px-4 md:px-10 pt-8 pb-12">
   <Breadcrumb items={crumbs} />
   <header class="mb-12">
-    <h1
-      class="text-5xl leading-[0.98] font-[800] tracking-[-0.03em] md:text-6xl lg:text-7xl"
-    >
+    <h1 class="text-5xl leading-[0.98] font-[800] tracking-[-0.03em] md:text-6xl lg:text-7xl">
       {heading}
     </h1>
   </header>
-  <div><slot /></div>
+  <div>
+    <slot />
+  </div>
 </div>

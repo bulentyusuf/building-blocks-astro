@@ -33,21 +33,15 @@ const title = `${page.title} | ${SITE_TITLE}`;
       <Breadcrumb
         items={[{ label: "Home", href: "/" }, { label: page.title }]}
       />
-      <h1
-        class="text-5xl leading-[0.98] font-[800] tracking-[-0.03em] md:text-6xl lg:text-7xl"
-      >
+      <h1 class="text-5xl leading-[0.98] font-[800] tracking-[-0.03em] md:text-6xl lg:text-7xl">
         {page.title}
       </h1>
-      {
-        lastUpdated && (
-          <p class="mt-5">
-            <UpdatedStamp date={lastUpdated} />
-          </p>
-        )
-      }
-      <article
-        class="mt-9 pt-2 md:rounded-container md:border-2 md:border-edge-quiet md:bg-card md:px-14 md:py-12"
-      >
+      {lastUpdated && (
+        <p class="mt-5">
+          <UpdatedStamp date={lastUpdated} />
+        </p>
+      )}
+      <article class="mt-9 pt-2 md:rounded-container md:border-2 md:border-edge-quiet md:bg-card md:px-14 md:py-12">
         <div
           class="prose text-pretty"
           set:html={renderRichText({

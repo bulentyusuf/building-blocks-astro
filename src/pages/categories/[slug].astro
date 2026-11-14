@@ -36,8 +36,9 @@ const closing =
 
 <Layout
   title={`${category.name} | ${SITE_TITLE}`}
-  description={category.description ||
-    `Posts in ${category.name} on ${SITE_TITLE}`}
+  description={
+    category.description || `Posts in ${category.name} on ${SITE_TITLE}`
+  }
   canonical={`${SITE_URL}/categories/${slug}`}
   social={{
     title: `${category.name} | ${SITE_TITLE}`,
@@ -58,8 +59,10 @@ const closing =
       <a
         href="/archive"
         class="text-brand-crimson underline decoration-2 underline-offset-[3px] hover:decoration-4"
-        >The archive</a
-      > has everything else.
+      >
+        The archive
+      </a>{" "}
+      has everything else.
     </p>
   </div>
 </Layout>

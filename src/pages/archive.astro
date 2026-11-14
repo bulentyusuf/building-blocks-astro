@@ -32,41 +32,39 @@ const title = `Archive | ${SITE_TITLE}`;
     crumbs={[{ label: "Home", href: "/" }, { label: "Archive" }]}
     heading="Archive"
   >
-    {
-      years.length === 0 ? (
-        <p class="text-lg text-brand-muted">No posts yet.</p>
-      ) : (
-        // One panel, each year a heading inside it.
-        <div class="overflow-hidden rounded-container border-2 border-edge-quiet bg-card">
-          {years.map((year) => {
-            const yearPosts = byYear.get(year)!;
-            return (
-              <section class="border-t-2 border-edge-quiet first:border-t-0">
-                {/* The year is the page's spine; the count a muted label. */}
-                <h2 class="flex items-baseline gap-4 px-5 pt-6 pb-3 sm:px-7">
-                  <span class="text-4xl leading-none font-[800] tracking-[-0.02em] tabular-nums md:text-5xl lg:text-[3.25rem]">
-                    {year}
-                  </span>
-                  <span class="font-mono text-sm font-medium text-brand-muted">
-                    <span aria-hidden="true">// </span>
-                    {`${yearPosts.length} ${yearPosts.length === 1 ? "post" : "posts"}`}
-                  </span>
-                </h2>
-                <ul>
-                  {yearPosts.map((post) => (
-                    <PostRow
-                      post={post}
-                      german={german.has(post.slug)}
-                      date="dayMonth"
-                      showStrand
-                    />
-                  ))}
-                </ul>
-              </section>
-            );
-          })}
-        </div>
-      )
-    }
+    {years.length === 0 ? (
+      <p class="text-lg text-brand-muted">No posts yet.</p>
+    ) : (
+      // One panel, each year a heading inside it.
+      <div class="overflow-hidden rounded-container border-2 border-edge-quiet bg-card">
+        {years.map((year) => {
+          const yearPosts = byYear.get(year)!;
+          return (
+            <section class="border-t-2 border-edge-quiet first:border-t-0">
+              {/* The year is the page's spine; the count a muted label. */}
+              <h2 class="flex items-baseline gap-4 px-5 pt-6 pb-3 sm:px-7">
+                <span class="text-4xl leading-none font-[800] tracking-[-0.02em] tabular-nums md:text-5xl lg:text-[3.25rem]">
+                  {year}
+                </span>
+                <span class="font-mono text-sm font-medium text-brand-muted">
+                  <span aria-hidden="true">// </span>
+                  {`${yearPosts.length} ${yearPosts.length === 1 ? "post" : "posts"}`}
+                </span>
+              </h2>
+              <ul>
+                {yearPosts.map((post) => (
+                  <PostRow
+                    post={post}
+                    german={german.has(post.slug)}
+                    date="dayMonth"
+                    showStrand
+                  />
+                ))}
+              </ul>
+            </section>
+          );
+        })}
+      </div>
+    )}
   </WidePage>
 </Layout>

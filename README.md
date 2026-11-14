@@ -23,12 +23,12 @@ and must match the `secret` in the space's preview URL.
 
 ## Commands
 
-| Command           | What it does                                          |
-| ----------------- | ----------------------------------------------------- |
-| `npm run dev`     | Development server, in the Workers runtime            |
-| `npm run build`   | Type-check, then build to `dist/`                     |
-| `npm run preview` | Serve the build locally, in the Workers runtime       |
-| `npm test`        | Unit tests                                            |
+| Command           | What it does                                    |
+| ----------------- | ----------------------------------------------- |
+| `npm run dev`     | Development server, in the Workers runtime      |
+| `npm run build`   | Type-check, then build to `dist/`               |
+| `npm run preview` | Serve the build locally, in the Workers runtime |
+| `npm test`        | Unit tests                                      |
 
 `npm run preview` is the one to trust for anything the Worker does: it runs
 the build in the same runtime as production.

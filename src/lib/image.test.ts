@@ -31,7 +31,9 @@ describe("image sources", () => {
     const { srcset, sizes } = responsiveSource(ASSET, "100vw");
     const widths = srcset.split(", ").map((entry) => entry.split(" ")[1]);
     expect(widths.at(-1)).toBe(`${WIDEST_SERVED_FILE}w`);
-    expect(widths).toEqual([...widths].sort((a, b) => parseInt(a) - parseInt(b)));
+    expect(widths).toEqual(
+      [...widths].sort((a, b) => parseInt(a) - parseInt(b)),
+    );
     expect(sizes).toBe("100vw");
   });
 
@@ -43,7 +45,11 @@ describe("image sources", () => {
 });
 
 describe("whether enlarging is worth offering", () => {
-  const desktop = { viewportWidth: 1440, viewportHeight: 900, rootFontSize: 16 };
+  const desktop = {
+    viewportWidth: 1440,
+    viewportHeight: 900,
+    rootFontSize: 16,
+  };
 
   it("offers it for a large photo on a large screen", () => {
     expect(

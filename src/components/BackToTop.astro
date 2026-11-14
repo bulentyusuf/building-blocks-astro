@@ -28,9 +28,8 @@
 </button>
 
 <script>
-  const button = document.querySelector<HTMLButtonElement>(
-    "[data-back-to-top]",
-  );
+  const button =
+    document.querySelector<HTMLButtonElement>("[data-back-to-top]");
   if (button) {
     const update = () => {
       button.inert = window.scrollY <= 600;

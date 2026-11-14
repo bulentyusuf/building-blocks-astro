@@ -62,21 +62,22 @@ const RESULT_TEMPLATE = `
   >
     <!-- Results up to 720px, the tag panel beside them from lg, where both
          fit; it stays while searching. -->
-    <div
-      class="lg:grid lg:grid-cols-[minmax(0,45rem)_minmax(17.5rem,22.5rem)] lg:items-start lg:justify-between lg:gap-16"
-    >
+    <div class="lg:grid lg:grid-cols-[minmax(0,45rem)_minmax(17.5rem,22.5rem)] lg:items-start lg:justify-between lg:gap-16">
       <section>
         <!-- Without scripts the input never appears, so say why. Underlined:
              crimson against the muted text is far below 3:1. -->
         <noscript>
           <p class="mb-6 text-brand-muted">
-            Search needs JavaScript. The index runs entirely in your browser,
-            so no query ever leaves this page — which also means there is
-            nothing to search with when scripts are turned off. The <a
+            Search needs JavaScript. The index runs entirely in your browser, so
+            no query ever leaves this page — which also means there is nothing
+            to search with when scripts are turned off. The{" "}
+            <a
               href="/archive"
               class="font-bold text-brand-crimson underline underline-offset-2 transition-opacity duration-200 hover:opacity-80"
-              >archive</a
-            > lists every post by year.
+            >
+              archive
+            </a>{" "}
+            lists every post by year.
           </p>
         </noscript>
         <p data-search-failed hidden class="text-brand-muted">
@@ -86,8 +87,7 @@ const RESULT_TEMPLATE = `
         <div class="pagefind-scope">
           <link rel="stylesheet" href="/pagefind/pagefind-component-ui.css" />
           <pagefind-config excerpt-length="30"></pagefind-config>
-          <pagefind-input placeholder="What are you looking for?"
-          ></pagefind-input>
+          <pagefind-input placeholder="What are you looking for?"></pagefind-input>
           <!-- Hidden by the styles below while the input is empty. -->
           <pagefind-summary></pagefind-summary>
           <pagefind-results set:html={RESULT_TEMPLATE} />
@@ -96,9 +96,7 @@ const RESULT_TEMPLATE = `
              sibling of .pagefind-scope. Smaller on phones, so the tag panel
              shows above the fold. -->
         <div class="search-empty">
-          <figure
-            class="mx-auto mt-6 max-w-[9rem] p-4 sm:mt-10 sm:max-w-[16rem] sm:p-8"
-          >
+          <figure class="mx-auto mt-6 max-w-[9rem] p-4 sm:mt-10 sm:max-w-[16rem] sm:p-8">
             <img
               src="/search-emblem.svg"
               alt=""
@@ -112,42 +110,39 @@ const RESULT_TEMPLATE = `
       <!-- Sticky from lg, scrolling on its own if taller than the window. The
            top padding keeps the tape inside the scroll box, and the matching
            negative margin lines the panel up with the input. -->
-      <aside
-        class="mt-12 lg:sticky lg:top-20 lg:-mt-5 lg:max-h-[calc(100dvh-6rem)] lg:overflow-y-auto lg:pt-5"
-      >
+      <aside class="mt-12 lg:sticky lg:top-20 lg:-mt-5 lg:max-h-[calc(100dvh-6rem)] lg:overflow-y-auto lg:pt-5">
         <!-- A taped note, the page's one strip of tape. -->
-        <div
-          class="relative rounded-container border-[3px] border-outline bg-card px-5.5 pt-6 pb-6"
-        >
+        <div class="relative rounded-container border-[3px] border-outline bg-card px-5.5 pt-6 pb-6">
           <Tape />
-          {
-            tags.length > 0 && (
-              <>
-                <p
-                  id="tag-entry-label"
-                  class="font-ui text-xl leading-tight font-[800]"
-                >
-                  Or start from a tag
-                </p>
-                <ul
-                  aria-labelledby="tag-entry-label"
-                  class="mt-4 mb-5 flex flex-wrap gap-2 pointer-coarse:gap-y-3"
-                >
-                  {tags.map((tag) => (
-                    <li>
-                      <TagPill tag={tag} size="compact" />
-                    </li>
-                  ))}
-                </ul>
-              </>
-            )
-          }
+          {tags.length > 0 && (
+            <>
+              <p
+                id="tag-entry-label"
+                class="font-ui text-xl leading-tight font-[800]"
+              >
+                Or start from a tag
+              </p>
+              <ul
+                aria-labelledby="tag-entry-label"
+                class="mt-4 mb-5 flex flex-wrap gap-2 pointer-coarse:gap-y-3"
+              >
+                {tags.map((tag) => (
+                  <li>
+                    <TagPill tag={tag} size="compact" />
+                  </li>
+                ))}
+              </ul>
+            </>
+          )}
           <p class="leading-relaxed text-brand-muted">
-            Or browse every post in the <a
+            Or browse every post in the{" "}
+            <a
               href="/archive"
               class="text-brand-crimson underline decoration-2 underline-offset-[3px] hover:decoration-4"
-              >archive</a
-            >.
+            >
+              archive
+            </a>
+            .
           </p>
         </div>
       </aside>

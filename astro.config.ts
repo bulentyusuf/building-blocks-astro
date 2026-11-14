@@ -65,12 +65,16 @@ export default defineConfig({
       options: {
         variants: [
           {
-            src: [`${variable}/literata/files/literata-latin-opsz-normal.woff2`],
+            src: [
+              `${variable}/literata/files/literata-latin-opsz-normal.woff2`,
+            ],
             weight: "200 900",
             style: "normal",
           },
           {
-            src: [`${variable}/literata/files/literata-latin-opsz-italic.woff2`],
+            src: [
+              `${variable}/literata/files/literata-latin-opsz-italic.woff2`,
+            ],
             weight: "200 900",
             style: "italic",
           },
@@ -86,8 +90,16 @@ export default defineConfig({
       optimizedFallbacks: false,
       options: {
         variants: [
-          { src: [`${plexMono}-400-normal.woff2`], weight: 400, style: "normal" },
-          { src: [`${plexMono}-500-normal.woff2`], weight: 500, style: "normal" },
+          {
+            src: [`${plexMono}-400-normal.woff2`],
+            weight: 400,
+            style: "normal",
+          },
+          {
+            src: [`${plexMono}-500-normal.woff2`],
+            weight: 500,
+            style: "normal",
+          },
         ],
       },
     },
