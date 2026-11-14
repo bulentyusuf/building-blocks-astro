@@ -362,3 +362,46 @@ describe("collection paging", () => {
     await expect(getAllAuthors(false)).resolves.toEqual([]);
   });
 });
+
+describe("the two Contentful APIs", () => {
+  const sent = (fetchMock: ReturnType<typeof vi.fn>) => ({
+    authorization: fetchMock.mock.calls[0][1].headers.Authorization as string,
+    preview: JSON.parse(fetchMock.mock.calls[0][1].body as string).variables
+      .preview as boolean,
+  });
+
+  it("reads published content with the delivery token", async () => {
+    vi.stubEnv("CONTENTFUL_PREVIEW_ACCESS_TOKEN", "cpa-token");
+    const fetchMock = vi.fn().mockResolvedValue(ok(AUTHORS));
+    vi.stubGlobal("fetch", fetchMock);
+
+    await getAllAuthors(false);
+    expect(sent(fetchMock)).toEqual({
+      authorization: "Bearer cda-token",
+      preview: false,
+    });
+  });
+
+  it("reads drafts with the preview token, and asks for drafts", async () => {
+    vi.stubEnv("CONTENTFUL_PREVIEW_ACCESS_TOKEN", "cpa-token");
+    const fetchMock = vi.fn().mockResolvedValue(ok(AUTHORS));
+    vi.stubGlobal("fetch", fetchMock);
+
+    await getAllAuthors(true);
+    expect(sent(fetchMock)).toEqual({
+      authorization: "Bearer cpa-token",
+      preview: true,
+    });
+  });
+
+  it("fails rather than falling back when the preview token is missing", async () => {
+    vi.stubEnv("CONTENTFUL_PREVIEW_ACCESS_TOKEN", "");
+    const fetchMock = vi.fn().mockResolvedValue(ok(AUTHORS));
+    vi.stubGlobal("fetch", fetchMock);
+
+    await expect(getAllAuthors(true)).rejects.toThrow(
+      /Missing CONTENTFUL_PREVIEW_ACCESS_TOKEN/,
+    );
+    expect(fetchMock).not.toHaveBeenCalled();
+  });
+});

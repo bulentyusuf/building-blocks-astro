@@ -1,5 +1,11 @@
 import { defineMiddleware } from "astro:middleware";
+import { getSecret } from "astro:env/server";
 import { createMemoStore, withMemo } from "./lib/memo";
+import {
+  PREVIEW_COOKIE,
+  PREVIEW_PATH,
+  isPreviewSession,
+} from "./lib/preview-session";
 import { onDemandHeaders } from "./lib/security-headers";
 
 // A build renders every page from one snapshot of the published content, so
@@ -10,8 +16,23 @@ const buildMemo = createMemoStore();
 export const onRequest = defineMiddleware((context, next) => {
   const shared = context.isPrerendered && import.meta.env.PROD;
   return withMemo(shared ? buildMemo : createMemoStore(), async () => {
-    const response = await next();
-    if (context.isPrerendered) return response;
+    if (context.isPrerendered) return next();
+
+    // The one gate for every draft page, so a new one cannot forget it.
+    const draft = context.url.pathname.startsWith(`${PREVIEW_PATH}/`);
+    const allowed =
+      !draft ||
+      isPreviewSession(
+        context.cookies.get(PREVIEW_COOKIE)?.value,
+        getSecret("CONTENTFUL_PREVIEW_SECRET")?.trim(),
+      );
+    const response = allowed
+      ? await next()
+      : new Response(
+          "No preview session. Open the preview from Contentful again.",
+          { status: 401 },
+        );
+
     // `_headers` does not apply to a response the Worker generates.
     for (const [name, value] of Object.entries(
       onDemandHeaders(context.url.pathname),
