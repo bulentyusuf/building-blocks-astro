@@ -1,0 +1,43 @@
+---
+import {
+  fixedSource,
+  loadingAttributes,
+  responsiveSource,
+} from "../lib/image";
+
+interface Props {
+  src: string;
+  alt: string;
+  /** With `sizes` the browser picks a width; without, `width` is the size. */
+  sizes?: string;
+  width?: number;
+  height?: number;
+  /** Fills its positioned parent, which sets the shape. */
+  fill?: boolean;
+  /** The page's largest image only. */
+  priority?: boolean;
+  class?: string;
+}
+
+const {
+  src,
+  alt,
+  sizes,
+  width,
+  height,
+  fill = false,
+  priority = false,
+  class: className,
+} = Astro.props;
+
+const source = sizes ? responsiveSource(src, sizes) : fixedSource(src, width!);
+---
+
+<img
+  {...source}
+  alt={alt}
+  width={fill ? undefined : width}
+  height={fill ? undefined : height}
+  {...loadingAttributes(priority)}
+  class:list={[fill && "absolute inset-0 size-full", className]}
+/>

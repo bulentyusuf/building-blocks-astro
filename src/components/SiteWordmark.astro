@@ -1,0 +1,21 @@
+---
+import { SITE_TITLE } from "../lib/constants";
+
+// The one link without a shadow.
+interface Props {
+  size?: "header" | "footer";
+}
+const { size = "header" } = Astro.props;
+const SIZES = {
+  header: "rounded-xl px-4 py-1.5 text-2xl",
+  footer: "rounded-lg px-3 py-1 text-xl",
+};
+---
+
+<a
+  href="/"
+  class:list={[
+    "tap-area inline-block -rotate-2 bg-brand-dark font-display font-[800] text-brand-bg",
+    SIZES[size],
+  ]}>{SITE_TITLE}</a
+>

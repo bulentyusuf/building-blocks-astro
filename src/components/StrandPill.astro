@@ -1,0 +1,15 @@
+---
+import type { Strand } from "../lib/strands";
+
+interface Props {
+  strand: Strand;
+}
+const { strand } = Astro.props;
+---
+
+<span
+  class:list={[
+    strand.fill,
+    "rounded-full border-2 border-brand-dark px-2 py-0.5 font-ui text-xs font-bold uppercase tracking-[0.06em] text-on-strand",
+  ]}>{strand.label}</span
+>

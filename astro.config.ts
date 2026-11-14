@@ -1,10 +1,14 @@
 import { writeFile } from "node:fs/promises";
-import { defineConfig, envField } from "astro/config";
+import { defineConfig, envField, fontProviders } from "astro/config";
 import type { AstroIntegration } from "astro";
 import cloudflare from "@astrojs/cloudflare";
 import tailwindcss from "@tailwindcss/vite";
 import { loadEnv } from "vite";
 import { indexingAllowed, staticHeadersFile } from "./src/lib/security-headers";
+
+const variable = "./node_modules/@fontsource-variable";
+const plexMono =
+  "./node_modules/@fontsource/ibm-plex-mono/files/ibm-plex-mono-latin";
 
 const env = loadEnv(process.env.NODE_ENV ?? "production", process.cwd(), "");
 const allowIndexing = indexingAllowed(env.ALLOW_INDEXING);
@@ -30,6 +34,62 @@ export default defineConfig({
   adapter: cloudflare({ imageService: "passthrough" }),
   session: false,
   integrations: [staticHeaders],
+  // Self-hosted from the installed font packages, so a build needs no font
+  // service. Latin only. The variable faces carry their whole weight range and
+  // the optical-size axis in one file per style.
+  fonts: [
+    {
+      provider: fontProviders.local(),
+      name: "Bricolage Grotesque",
+      cssVariable: "--font-bricolage",
+      fallbacks: ["sans-serif"],
+      options: {
+        variants: [
+          {
+            src: [
+              `${variable}/bricolage-grotesque/files/bricolage-grotesque-latin-opsz-normal.woff2`,
+            ],
+            weight: "200 800",
+            style: "normal",
+          },
+        ],
+      },
+    },
+    {
+      provider: fontProviders.local(),
+      name: "Literata",
+      cssVariable: "--font-literata",
+      fallbacks: ["serif"],
+      options: {
+        variants: [
+          {
+            src: [`${variable}/literata/files/literata-latin-opsz-normal.woff2`],
+            weight: "200 900",
+            style: "normal",
+          },
+          {
+            src: [`${variable}/literata/files/literata-latin-opsz-italic.woff2`],
+            weight: "200 900",
+            style: "italic",
+          },
+        ],
+      },
+    },
+    {
+      provider: fontProviders.local(),
+      name: "IBM Plex Mono",
+      cssVariable: "--font-plex-mono",
+      // A proportional fallback cannot be size-matched to a monospace face.
+      fallbacks: ["monospace"],
+      optimizedFallbacks: false,
+      options: {
+        variants: [
+          { src: [`${plexMono}-400-normal.woff2`], weight: 400, style: "normal" },
+          { src: [`${plexMono}-500-normal.woff2`], weight: 500, style: "normal" },
+        ],
+      },
+    },
+  ],
   env: {
     schema: {
       CONTENTFUL_SPACE_ID: envField.string({

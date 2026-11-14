@@ -1,0 +1,42 @@
+---
+import ContentfulImage from "./ContentfulImage.astro";
+import type { Author } from "../lib/types";
+
+// The writers' avatars, cropped by the footer's top rule. Decoration with a
+// purpose: each is the way to that writer's page.
+interface Props {
+  authors: Pick<Author, "name" | "slug" | "picture">[];
+}
+const mascots = Astro.props.authors.filter((a) => a.slug && a.picture?.url);
+
+// Staggered so the three heads do not sit on one line.
+const OFFSETS = ["mt-2", "mt-0", "mt-[3px]"];
+---
+
+{
+  mascots.length > 0 && (
+    <nav
+      aria-label="Writers"
+      class="flex h-[50px] items-start gap-3 overflow-hidden pt-2.5 md:h-[66px] md:gap-[18px] md:pt-3"
+    >
+      {mascots.map((author, i) => (
+        <a
+          href={`/authors/${author.slug}`}
+          aria-label={`Posts by ${author.name}`}
+          class:list={[
+            OFFSETS[i % OFFSETS.length],
+            "block shrink-0 rounded-full transition-transform duration-150 hover:-translate-y-2.5 focus-visible:-translate-y-2.5 motion-reduce:transition-none",
+          ]}
+        >
+          <ContentfulImage
+            src={author.picture!.url}
+            alt=""
+            width={92}
+            height={92}
+            class="size-[68px] rounded-full border-[3px] border-outline bg-brand-bg object-cover md:size-[92px]"
+          />
+        </a>
+      ))}
+    </nav>
+  )
+}

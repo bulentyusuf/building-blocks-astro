@@ -1,0 +1,108 @@
+---
+import PostView from "./PostView.astro";
+import Layout from "../layouts/Layout.astro";
+import { postAuthors } from "../lib/authors";
+import {
+  DEFAULT_LOCALE,
+  DEFAULT_OG_LOCALE,
+  GERMAN_LOCALE,
+  GERMAN_OG_LOCALE,
+  SITE_TITLE,
+  SITE_URL,
+} from "../lib/constants";
+import { PREVIEW_PATH } from "../lib/preview-session";
+import { postLanguageAlternates } from "../lib/translations";
+import type { ListPost, Post } from "../lib/types";
+
+// A whole post page, for the published routes and their draft twins.
+interface Props {
+  post: Post;
+  morePosts: ListPost[];
+  allPosts: ListPost[];
+  slug: string;
+  german: boolean;
+  /** Whether the post has a German version. Always true on a German page. */
+  translated: boolean;
+  preview?: boolean;
+}
+
+const {
+  post,
+  morePosts,
+  allPosts,
+  slug,
+  german,
+  translated,
+  preview = false,
+} = Astro.props;
+
+const canonical = `${SITE_URL}${german ? "/de" : ""}/posts/${slug}`;
+// The card is drawn for the English page; the German one borrows it.
+const card = `${SITE_URL}/posts/${slug}/opengraph-image`;
+const authorUrls = postAuthors(post)
+  .filter((a) => a.slug)
+  .map((a) => `${SITE_URL}/authors/${a.slug}`);
+
+// A draft links to the other language's draft.
+const base = preview ? PREVIEW_PATH : "";
+const languageLink = german
+  ? {
+      href: `${base}/posts/${slug}`,
+      lang: DEFAULT_LOCALE,
+      label: "Read in English",
+    }
+  : translated
+    ? {
+        href: `${base}/de/posts/${slug}`,
+        lang: GERMAN_LOCALE,
+        label: "Auch auf Deutsch lesen",
+      }
+    : undefined;
+---
+
+<Layout
+  title={`${post.title} | ${SITE_TITLE}`}
+  description={post.excerpt}
+  canonical={canonical}
+  preview={preview}
+>
+  <Fragment slot="social">
+    {
+      translated &&
+        Object.entries(postLanguageAlternates(slug)).map(([code, href]) => (
+          <link rel="alternate" hreflang={code} href={href} />
+        ))
+    }
+    <meta property="og:title" content={post.title} />
+    <meta property="og:description" content={post.excerpt} />
+    <meta property="og:url" content={canonical} />
+    <meta property="og:site_name" content={SITE_TITLE} />
+    <meta
+      property="og:locale"
+      content={german ? GERMAN_OG_LOCALE : DEFAULT_OG_LOCALE}
+    />
+    <meta property="og:image" content={card} />
+    <meta property="og:image:type" content="image/png" />
+    <meta property="og:image:width" content="1200" />
+    <meta property="og:image:height" content="630" />
+    <meta property="og:type" content="article" />
+    <meta property="article:published_time" content={post.date} />
+    <meta
+      property="article:modified_time"
+      content={post.updatedDate ?? post.date}
+    />
+    {authorUrls.map((url) => <meta property="article:author" content={url} />)}
+    <meta name="twitter:card" content="summary_large_image" />
+    <meta name="twitter:title" content={post.title} />
+    <meta name="twitter:description" content={post.excerpt} />
+    <meta name="twitter:image" content={card} />
+  </Fragment>
+  <PostView
+    post={post}
+    morePosts={morePosts}
+    allPosts={allPosts}
+    slug={slug}
+    german={german}
+    languageLink={languageLink}
+  />
+</Layout>

@@ -1,0 +1,76 @@
+---
+import FeatureCard from "./FeatureCard.astro";
+import Label from "./Label.astro";
+import PostCard from "./PostCard.astro";
+import { postTags } from "../lib/tags";
+import type { ListPost } from "../lib/types";
+
+// The latest post as a feature card, then up to five more as cards.
+interface Props {
+  posts: ListPost[];
+  /** False on a strand page, whose cards would repeat its strand. */
+  showStrand: boolean;
+  /** Computed from all posts, so a pill never links to a 404. */
+  visibleTags: Set<string>;
+}
+const { posts, showStrand, visibleTags } = Astro.props;
+const [latest, ...previous] = posts;
+
+// From xl: two across for 2 or 4 cards, three otherwise. Five sit 2 + 3 on six
+// columns, the newer pair wide, so size steps down with age. Below xl the
+// fifth takes the row side by side rather than sit alone.
+const five = previous.length === 5;
+const across = previous.length === 2 || previous.length === 4 ? 2 : 3;
+// The pair spans half the row, so it sizes and sets type as two across.
+const cardAcross = (i: number) =>
+  !five ? across : i < 2 ? 2 : i === 4 ? "closing" : 3;
+---
+
+{
+  latest && (
+    <section class="mt-4">
+      <Label>latest post</Label>
+      <FeatureCard
+        post={latest}
+        tags={postTags(latest).filter((t) => visibleTags.has(t.slug))}
+        showStrand={showStrand}
+      />
+    </section>
+  )
+}
+{
+  previous.length > 0 && (
+    <section class="mt-16">
+      <Label>previous posts</Label>
+      <ul
+        class={
+          five
+            ? "grid gap-8 md:grid-cols-2 md:gap-9 xl:grid-cols-6"
+            : across === 3
+              ? "grid gap-8 md:grid-cols-2 md:gap-9 xl:grid-cols-3"
+              : "grid gap-8 md:grid-cols-2 md:gap-9"
+        }
+      >
+        {previous.map((post, i) => (
+          <li
+            class={
+              !five
+                ? "flex"
+                : i < 2
+                  ? "flex xl:col-span-3"
+                  : i === 4
+                    ? "flex md:col-span-2 xl:col-span-2"
+                    : "flex xl:col-span-2"
+            }
+          >
+            <PostCard
+              post={post}
+              showStrand={showStrand}
+              across={cardAcross(i)}
+            />
+          </li>
+        ))}
+      </ul>
+    </section>
+  )
+}

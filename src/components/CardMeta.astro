@@ -1,0 +1,32 @@
+---
+import StrandPill from "./StrandPill.astro";
+import { formatAuthorsByline, postAuthors } from "../lib/authors";
+import { formatLongDate } from "../lib/date";
+import { strandFor } from "../lib/strands";
+import type { ListPost } from "../lib/types";
+
+interface Props {
+  post: ListPost;
+  class: string;
+  /** Off on a strand page, where every card would repeat its strand. */
+  showStrand: boolean;
+  bylineClass?: string;
+}
+const { post, class: className, showStrand, bylineClass } = Astro.props;
+const strand = showStrand ? strandFor(post.category) : undefined;
+---
+
+<p class:list={["flex flex-wrap items-center gap-2.5", className]}>
+  {
+    strand && (
+      <span class="shrink-0">
+        <StrandPill strand={strand} />
+      </span>
+    )
+  }
+  <span class:list={["font-ui font-semibold tabular-nums", bylineClass]}
+    >{formatAuthorsByline(postAuthors(post))} · <time datetime={post.date}
+      >{formatLongDate(post.date)}</time
+    ></span
+  >
+</p>

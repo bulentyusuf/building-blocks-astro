@@ -1,0 +1,50 @@
+---
+import type { Heading } from "../lib/headings";
+import { widont } from "../lib/typography";
+
+interface Props {
+  headings: Heading[];
+  lang?: string;
+  numbered: boolean;
+}
+const { headings, lang, numbered } = Astro.props;
+---
+
+<nav aria-label="Table of contents" data-toc>
+  <p
+    class="mb-4 hidden font-mono text-sm font-medium text-brand-muted xl:block"
+  >
+    <span aria-hidden="true">// </span>on this page
+  </p>
+  <!-- The entries are the post's headings, so they take its language; the
+       label above is chrome. 44px to tap on touch; xl keeps the gap for a
+       mouse. -->
+  <ul lang={lang} class="font-ui leading-[1.3] xl:pointer-fine:space-y-4">
+    {
+      headings.map((heading, i) => (
+        <li>
+          {/* The page's script marks the entry being read with aria-current,
+              so assistive tech gets the position sighted readers see. */}
+          <a
+            href={`#${heading.slug}`}
+            class:list={[
+              "py-3 font-medium transition-colors duration-200 hover:text-brand-crimson xl:pointer-fine:py-0 aria-[current=location]:font-bold aria-[current=location]:text-brand-crimson",
+              numbered ? "grid grid-cols-[1.75rem_1fr]" : "block",
+            ]}
+          >
+            {numbered && (
+              // Matches the heading's stamp, so hidden here too.
+              <span
+                aria-hidden="true"
+                class="pt-0.5 font-ui text-[0.8125rem] font-bold tabular-nums"
+              >
+                {String(i + 1).padStart(2, "0")}
+              </span>
+            )}
+            {widont(heading.text)}
+          </a>
+        </li>
+      ))
+    }
+  </ul>
+</nav>

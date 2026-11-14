@@ -1,0 +1,57 @@
+---
+import CardCover from "./CardCover.astro";
+import CardMeta from "./CardMeta.astro";
+import { STRANDS, strandFor } from "../lib/strands";
+import type { ListPost } from "../lib/types";
+import { widont } from "../lib/typography";
+
+interface Props {
+  post: ListPost;
+  showStrand: boolean;
+  /** Columns from xl: 2 or 3. "closing" is 3 from xl, and below it the full
+   *  row with cover and text side by side, sized as one card of two. */
+  across: 2 | 3 | "closing";
+}
+const { post, showStrand, across } = Astro.props;
+const strand = strandFor(post.category) ?? STRANDS[0];
+const closing = across === "closing";
+---
+
+<!-- Whole class strings throughout, so Tailwind sees each one. -->
+<article
+  class:list={[
+    "relative border-[3px] border-outline bg-card transition-[translate,box-shadow] duration-150 hover:shadow-none motion-reduce:transition-none hover:translate-[3px] md:hover:translate-[4px]",
+    closing
+      ? "flex w-full flex-col gap-4 overflow-hidden rounded-container pb-5 md:max-xl:grid md:max-xl:grid-cols-2 md:max-xl:gap-x-9 md:max-xl:pb-0"
+      : "flex w-full flex-col gap-4 overflow-hidden rounded-container pb-5",
+    strand.cardShadow,
+  ]}
+>
+  <!-- One column to md, then two, then `across` from xl. -->
+  <CardCover
+    post={post}
+    sizes={`(width < 48rem) calc(100vw - 2.375rem), (width < 75rem) calc(50vw - 4rem), ${across === 2 ? "540px" : "(width < 80rem) 540px, 343px"}`}
+    class="aspect-3/2"
+  />
+  <div
+    class={closing
+      ? "flex flex-col gap-3.5 px-4.5 md:max-xl:self-center md:max-xl:py-5 md:max-xl:pl-0"
+      : "flex flex-col gap-3.5 px-4.5"}
+  >
+    <CardMeta post={post} class="text-sm" showStrand={showStrand} />
+    <h3
+      class={across !== 2
+        ? "text-2xl font-[800] leading-[1.05] text-balance md:text-[1.875rem] xl:text-2xl"
+        : "text-2xl font-[800] leading-[1.05] text-balance md:text-[1.875rem]"}
+    >
+      <a
+        href={`/posts/${post.slug}`}
+        class="after:absolute after:inset-0 after:content-[''] hover:text-brand-crimson transition-colors duration-200"
+        >{widont(post.title)}</a
+      >
+    </h3>
+    <p class="text-base leading-relaxed text-pretty md:text-[1.0625rem]">
+      {widont(post.excerpt)}
+    </p>
+  </div>
+</article>

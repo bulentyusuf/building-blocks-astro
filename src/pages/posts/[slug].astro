@@ -1,0 +1,32 @@
+---
+import PostPage from "../../components/PostPage.astro";
+import {
+  getAllPosts,
+  getGermanPostSlugs,
+  getPostAndMorePosts,
+} from "../../lib/api";
+
+export async function getStaticPaths() {
+  const posts = await getAllPosts(false);
+  return posts.map((post) => ({ params: { slug: post.slug } }));
+}
+
+const slug = Astro.params.slug!;
+// All posts too: a tag pill shows only if its tag clears the sitewide
+// threshold.
+const [{ post, morePosts }, allPosts, germanSlugs] = await Promise.all([
+  getPostAndMorePosts(slug, false),
+  getAllPosts(false),
+  getGermanPostSlugs(false),
+]);
+if (!post) throw new Error(`No published post for "${slug}".`);
+---
+
+<PostPage
+  post={post}
+  morePosts={morePosts}
+  allPosts={allPosts}
+  slug={slug}
+  german={false}
+  translated={germanSlugs.includes(slug)}
+/>
