@@ -1,14 +1,21 @@
 ---
 import "../styles/global.css";
+import { getAllPosts } from "../lib/api";
+import { SITE_TITLE } from "../lib/constants";
+
+const posts = await getAllPosts(false);
 ---
 
 <html lang="en-GB">
   <head>
     <meta charset="utf-8" />
     <meta name="viewport" content="width=device-width, initial-scale=1" />
-    <title>Be Useful.</title>
+    <title>{SITE_TITLE}</title>
   </head>
   <body class="p-8">
-    <h1 class="text-4xl font-bold">Be Useful.</h1>
+    <h1 class="text-4xl font-bold">{SITE_TITLE}</h1>
+    <ul>
+      {posts.map((post) => <li>{post.title}</li>)}
+    </ul>
   </body>
 </html>

@@ -1,0 +1,288 @@
+import { describe, it, expect, vi, beforeEach, afterEach } from "vitest";
+
+vi.mock("astro:env/server", () => ({
+  getSecret: (name: string) => process.env[name],
+}));
+
+import { getGermanPostAndMorePosts, getGermanPostSlugs } from "./api";
+
+// de-DE has no fallback, so an untranslated post arrives with null fields.
+const page = (items: unknown[]) =>
+  new Response(
+    JSON.stringify({
+      data: { postCollection: { total: items.length, items } },
+    }),
+    { status: 200, headers: { "Content-Type": "application/json" } },
+  );
+
+beforeEach(() => {
+  vi.stubEnv("CONTENTFUL_SPACE_ID", "space123");
+  vi.stubEnv("CONTENTFUL_ACCESS_TOKEN", "cda-token");
+  vi.stubEnv("CONTENTFUL_PREVIEW_ACCESS_TOKEN", "cpa-token");
+});
+
+afterEach(() => {
+  vi.unstubAllEnvs();
+  vi.restoreAllMocks();
+});
+
+describe("getGermanPostSlugs", () => {
+  it("keeps only posts with a German title and excerpt", async () => {
+    vi.stubGlobal(
+      "fetch",
+      vi.fn().mockResolvedValue(
+        page([
+          { slug: "full", title: "Titel", excerpt: "Auszug" },
+          { slug: "title-only", title: "Titel", excerpt: null },
+          { slug: "untranslated", title: null, excerpt: null },
+        ]),
+      ),
+    );
+
+    await expect(getGermanPostSlugs(false)).resolves.toEqual(["full"]);
+  });
+
+  it("asks Contentful for de-DE", async () => {
+    // Non-vacuous: without the locale argument every post would pass the filter.
+    const fetchMock = vi.fn().mockResolvedValue(page([]));
+    vi.stubGlobal("fetch", fetchMock);
+
+    await getGermanPostSlugs(true);
+    const body = JSON.parse(fetchMock.mock.calls[0][1].body as string);
+    expect(body.query).toContain('locale: "de-DE"');
+  });
+});
+
+describe("getGermanPostAndMorePosts", () => {
+  // Answers each query by name, so the two requests can differ.
+  const respond = (german: unknown) =>
+    vi.fn(async (_url: string, init: { body: string }) => {
+      const { query } = JSON.parse(init.body) as { query: string };
+      if (query.includes("GetGermanPost")) {
+        return page(german ? [german] : []);
+      }
+      if (query.includes("GetPost(")) {
+        return page([
+          {
+            slug: "a-post",
+            title: "English title",
+            excerpt: "English excerpt",
+            coverImage: { url: "https://images.ctfassets.net/cover.jpg" },
+            content: {
+              json: { nodeType: "document", content: [] },
+              links: {
+                assets: { block: [{ sys: { id: "img" } }] },
+                entries: {
+                  block: [
+                    {
+                      __typename: "Callout",
+                      sys: { id: "c1" },
+                      label: "A word on boot media",
+                      body: { json: "en-c1" },
+                    },
+                    {
+                      __typename: "Callout",
+                      sys: { id: "c2" },
+                      label: "Another word",
+                      body: { json: "en-c2" },
+                    },
+                  ],
+                },
+              },
+            },
+          },
+        ]);
+      }
+      return page([]);
+    });
+
+  it("takes the text from German and the cover and links from English", async () => {
+    vi.stubGlobal(
+      "fetch",
+      respond({
+        title: "Deutscher Titel",
+        excerpt: "Deutscher Auszug",
+        content: { json: { nodeType: "document", content: ["de"] } },
+      }),
+    );
+
+    const { post } = await getGermanPostAndMorePosts("a-post", false);
+    expect(post?.title).toBe("Deutscher Titel");
+    expect(post?.excerpt).toBe("Deutscher Auszug");
+    expect(post?.content.json).toEqual({
+      nodeType: "document",
+      content: ["de"],
+    });
+    expect(post?.coverImage?.url).toBe(
+      "https://images.ctfassets.net/cover.jpg",
+    );
+    expect(post?.content.links.assets.block).toEqual([{ sys: { id: "img" } }]);
+  });
+
+  it("asks de-DE for text only, so no image resolves in German", async () => {
+    // Non-vacuous: a file or image field in this query would come back null.
+    const fetchMock = respond(null);
+    vi.stubGlobal("fetch", fetchMock);
+
+    await getGermanPostAndMorePosts("b-post", false);
+    const germanQuery = fetchMock.mock.calls
+      .map((c) => (JSON.parse(c[1].body) as { query: string }).query)
+      .find((q) => q.includes("GetGermanPost"));
+    expect(germanQuery).toContain('locale: "de-DE"');
+    // An embed's title and caption may come through; its file never may.
+    expect(germanQuery).not.toMatch(
+      /coverImage|picture|url|fileName|width|height/,
+    );
+    const assetSelection = germanQuery!.match(/assets\s*{([\s\S]*?)}\s*}/)?.[1];
+    expect(assetSelection).toMatch(/title/);
+    expect(assetSelection).toMatch(/description/);
+  });
+
+  describe("an embed's alt and caption", () => {
+    const withAsset = (
+      english: { title: string; description: string },
+      german: { title: string | null; description: string | null } | null,
+    ) =>
+      vi.fn(async (_url: string, init: { body: string }) => {
+        const { query } = JSON.parse(init.body) as { query: string };
+        const doc = { nodeType: "document", content: [] };
+        if (query.includes("GetGermanPost")) {
+          return page([
+            {
+              title: "Titel",
+              excerpt: "Auszug",
+              content: {
+                json: doc,
+                links: {
+                  assets: {
+                    block: german ? [{ sys: { id: "img" }, ...german }] : [],
+                  },
+                },
+              },
+            },
+          ]);
+        }
+        if (query.includes("GetPost(")) {
+          return page([
+            {
+              slug: "e-post",
+              title: "English title",
+              excerpt: "English excerpt",
+              content: {
+                json: doc,
+                links: {
+                  assets: {
+                    block: [
+                      {
+                        sys: { id: "img" },
+                        url: "https://images.ctfassets.net/img.jpg",
+                        ...english,
+                      },
+                    ],
+                  },
+                },
+              },
+            },
+          ]);
+        }
+        return page([]);
+      });
+
+    const english = { title: "Two dogs", description: "Woof." };
+
+    it("turn German together when both are translated", async () => {
+      vi.stubGlobal(
+        "fetch",
+        withAsset(english, { title: "Zwei Hunde", description: "Wuff." }),
+      );
+      const { post } = await getGermanPostAndMorePosts("e-post", false);
+      const img = post!.content.links.assets.block[0]!;
+      expect(img).toMatchObject({
+        title: "Zwei Hunde",
+        description: "Wuff.",
+        lang: "de-DE",
+        // The file stays the English asset's.
+        url: "https://images.ctfassets.net/img.jpg",
+      });
+    });
+
+    it("stay English, untagged, when only the alt is translated", async () => {
+      // Known-bad control: a German alt over an English caption would mix
+      // languages inside one figure.
+      vi.stubGlobal(
+        "fetch",
+        withAsset(english, { title: "Zwei Hunde", description: null }),
+      );
+      const { post } = await getGermanPostAndMorePosts("e-post", false);
+      const img = post!.content.links.assets.block[0]!;
+      expect(img.title).toBe("Two dogs");
+      expect(img.description).toBe("Woof.");
+      expect(img.lang).toBeUndefined();
+    });
+
+    it("stay English when nothing is translated", async () => {
+      vi.stubGlobal(
+        "fetch",
+        withAsset(english, { title: null, description: null }),
+      );
+      const { post } = await getGermanPostAndMorePosts("e-post", false);
+      const img = post!.content.links.assets.block[0]!;
+      expect(img.title).toBe("Two dogs");
+      expect(img.lang).toBeUndefined();
+    });
+  });
+
+  it("returns no post when the German body is missing", async () => {
+    vi.stubGlobal(
+      "fetch",
+      respond({ title: "Titel", excerpt: "Auszug", content: null }),
+    );
+
+    const { post } = await getGermanPostAndMorePosts("c-post", false);
+    expect(post).toBeUndefined();
+  });
+
+  it("uses a German callout where one exists and tags the rest English", async () => {
+    // The RetroPie post's callout rendered English on its German page because
+    // the German query never asked for block entries.
+    vi.stubGlobal(
+      "fetch",
+      respond({
+        title: "Titel",
+        excerpt: "Auszug",
+        content: {
+          json: { nodeType: "document", content: [] },
+          links: {
+            entries: {
+              block: [
+                {
+                  __typename: "Callout",
+                  sys: { id: "c1" },
+                  label: "Ein Wort zum Bootmedium",
+                  body: { json: "de-c1" },
+                },
+                {
+                  __typename: "Callout",
+                  sys: { id: "c2" },
+                  label: null,
+                  body: null,
+                },
+              ],
+            },
+          },
+        },
+      }),
+    );
+
+    const { post } = await getGermanPostAndMorePosts("e-post", false);
+    const [c1, c2] = post!.content.links.entries!.block.map(
+      (c) => c as { label: string; body: { json: unknown }; lang?: string },
+    );
+    expect(c1.label).toBe("Ein Wort zum Bootmedium");
+    expect(c1.body.json).toBe("de-c1");
+    expect(c1.lang).toBeUndefined();
+    // Known-bad control: the untranslated callout keeps its English text.
+    expect(c2.label).toBe("Another word");
+    expect(c2.lang).toBe("en-GB");
+  });
+});

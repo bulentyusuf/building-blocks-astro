@@ -1,0 +1,746 @@
+import { getSecret } from "astro:env/server";
+import { memoise } from "./memo";
+import { relatedPosts } from "./related";
+import { MAX_AUTHORS, GERMAN_LOCALE, DEFAULT_LOCALE } from "./constants";
+import { present } from "./links";
+import type {
+  Post,
+  PostCollectionResponse,
+  ListPost,
+  ListPostCollectionResponse,
+  CardPost,
+  CardPostCollectionResponse,
+  Page,
+  PageCollectionResponse,
+  PageMeta,
+  Category,
+  CategoryCollectionResponse,
+  Tag,
+  TagCollectionResponse,
+  Author,
+  AuthorCollectionResponse,
+} from "./types";
+
+// Every rich-text asset selection. `width` and `height` set the figure's aspect
+// ratio; without them every image lays out 3:2.
+const ASSET_BLOCK_FIELDS = `
+  sys {
+    id
+  }
+  url
+  title
+  fileName
+  description
+  width
+  height
+`;
+
+const POST_GRAPHQL_FIELDS = `
+  slug
+  title
+  coverImage {
+    url
+    title
+    # fileName is not rendered. The cover component compares the title against
+    # it to catch a filename stem standing in for alt text; see the note on
+    # CoverImage in types.ts.
+    fileName
+  }
+  date
+  updatedDate
+  numberedSections
+
+  excerpt
+  content {
+    json
+    links {
+      assets {
+        block {
+          ${ASSET_BLOCK_FIELDS}
+        }
+      }
+      entries {
+        block {
+          sys {
+            id
+          }
+          __typename
+          ... on CodeBlock {
+            language
+            code
+            filename
+          }
+          ... on PromptBlock {
+            prompt
+            label
+            image {
+              url
+              description
+            }
+          }
+          ... on Callout {
+            label
+            hideFromSearch
+            body {
+              json
+            }
+          }
+        }
+      }
+    }
+  }
+  category {
+    name
+    slug
+  }
+  tagsCollection(limit: 3) {
+    items {
+      name
+      slug
+    }
+  }
+  authorsCollection(limit: ${MAX_AUTHORS}) {
+    items {
+      name
+      slug
+      picture {
+        url
+      }
+      bio {
+        json
+        links {
+          assets {
+            block {
+              ${ASSET_BLOCK_FIELDS}
+            }
+          }
+        }
+      }
+    }
+  }
+`;
+
+// getAllPosts' fragment: POST_GRAPHQL_FIELDS without `content` and `bio`, so
+// both are absent. Tags ride along because tag grouping is in memory. These
+// strings are GraphQL: a `//` comment inside one fails every post query, so
+// use `#`.
+const LIST_GRAPHQL_FIELDS = `
+  slug
+  title
+  coverImage {
+    url
+    title
+    # fileName is not rendered. The cover component compares the title against
+    # it to catch a filename stem standing in for alt text; see the note on
+    # CoverImage in types.ts.
+    fileName
+  }
+  date
+  updatedDate
+
+  excerpt
+  category {
+    name
+    slug
+  }
+  tagsCollection(limit: 3) {
+    items {
+      name
+      slug
+    }
+  }
+  authorsCollection(limit: ${MAX_AUTHORS}) {
+    items {
+      name
+      slug
+      picture {
+        url
+      }
+    }
+  }
+`;
+
+const PAGE_GRAPHQL_FIELDS = `
+  slug
+  title
+  sys {
+    publishedAt
+    firstPublishedAt
+  }
+  body {
+    json
+    links {
+      assets {
+        block {
+          ${ASSET_BLOCK_FIELDS}
+        }
+      }
+    }
+  }
+`;
+
+const GRAPHQL_MAX_ATTEMPTS = 3;
+const GRAPHQL_RETRY_BASE_MS = 500;
+
+type RetryDelay = (ms: number) => Promise<void>;
+
+const realRetryDelay: RetryDelay = (ms) =>
+  new Promise((resolve) => setTimeout(resolve, ms));
+
+let retryDelay: RetryDelay = realRetryDelay;
+
+// Test seam for the retry delay. Replace the delay, never the base constant,
+// which is what production waits. No argument restores the real one.
+export function setRetryDelayForTests(next: RetryDelay = realRetryDelay): void {
+  // Callable from app code too, where it would turn retries into hammering.
+  if (import.meta.env.PROD) {
+    throw new Error(
+      "setRetryDelayForTests must not be called in production. It exists only so the test suite can skip the real backoff.",
+    );
+  }
+  retryDelay = next;
+}
+
+// Transient Contentful failures. Any other 4xx is a real error.
+const GRAPHQL_RETRY_STATUSES = new Set([429, 500, 502, 503, 504]);
+
+type GraphQLVariables = Record<string, unknown>;
+
+// `data` and `errors` can both be present.
+type GraphQLEnvelope = { data?: unknown; errors?: unknown[] };
+
+// Read per call, not at import: a build reads the environment, an on-demand
+// route the Worker's secrets. Trimmed, or a pasted trailing newline would
+// reach the request URL.
+function requireEnv(name: string): string {
+  const value = getSecret(name)?.trim();
+  if (!value) {
+    throw new Error(
+      `Missing ${name}. Set it in .env locally, and as a build variable and a Worker secret in production.`,
+    );
+  }
+  return value;
+}
+
+// preview keeps its default: this is private and never a memo key.
+async function fetchGraphQL<T>(
+  query: string,
+  preview = false,
+  variables: GraphQLVariables = {},
+): Promise<T> {
+  const spaceId = requireEnv("CONTENTFUL_SPACE_ID");
+  const token = requireEnv(
+    preview ? "CONTENTFUL_PREVIEW_ACCESS_TOKEN" : "CONTENTFUL_ACCESS_TOKEN",
+  );
+  const url = `https://graphql.contentful.com/content/v1/spaces/${spaceId}`;
+
+  let lastError: Error | undefined;
+
+  for (let attempt = 1; attempt <= GRAPHQL_MAX_ATTEMPTS; attempt++) {
+    if (attempt > 1) {
+      // Otherwise silent, so a build brushing the rate limit leaves no trace.
+      console.warn(
+        `[contentful] retry ${attempt}/${GRAPHQL_MAX_ATTEMPTS}: ${lastError?.message.slice(0, 200)}`,
+      );
+      await retryDelay(GRAPHQL_RETRY_BASE_MS * 2 ** (attempt - 2));
+    }
+
+    let response: Response;
+    try {
+      response = await fetch(url, {
+        method: "POST",
+        headers: {
+          "Content-Type": "application/json",
+          Authorization: `Bearer ${token}`,
+        },
+        body: JSON.stringify({ query, variables }),
+      });
+    } catch (cause) {
+      // Socket-level failure. `cause` keeps the stack that tells DNS from TLS.
+      lastError = new Error(
+        `Contentful GraphQL request failed: ${String(cause)}`,
+        {
+          cause,
+        },
+      );
+      continue;
+    }
+
+    if (!response.ok) {
+      const detail = await response.text();
+      const reset = response.headers.get("x-contentful-ratelimit-reset");
+      lastError = new Error(
+        `Contentful GraphQL request failed: ${response.status} ${response.statusText}${reset ? ` (reset ${reset}s)` : ""} ${detail}`,
+      );
+      if (GRAPHQL_RETRY_STATUSES.has(response.status)) continue;
+      throw lastError;
+    }
+
+    // Parsed separately so a parse failure can quote the body and status.
+    const raw = await response.text();
+    let body: GraphQLEnvelope;
+    try {
+      body = JSON.parse(raw) as GraphQLEnvelope;
+    } catch (cause) {
+      // Non-JSON on a 200 is usually a proxy error page, so it is retried.
+      lastError = new Error(
+        `Contentful GraphQL returned an unparseable response: ${response.status} ${response.statusText} ${raw.slice(0, 200)}`,
+        { cause },
+      );
+      continue;
+    }
+
+    if (Array.isArray(body.errors) && body.errors.length > 0) {
+      const detail = JSON.stringify(body.errors);
+      // No `data` means the query never ran; with `data` it is usually a link
+      // to an unpublished entry, which warns rather than failing the build.
+      if (!body.data) {
+        throw new Error(`Contentful GraphQL returned errors: ${detail}`);
+      }
+      console.warn(`Contentful GraphQL partial response: ${detail}`);
+    }
+
+    return body as T;
+  }
+
+  throw lastError ?? new Error("Contentful GraphQL request failed");
+}
+
+// Contentful's collection ceiling.
+const COLLECTION_PAGE_SIZE = 100;
+
+// The query must take `$limit: Int!` and `$skip: Int!` and select `total`.
+// Drop `total` and the first response silently becomes the whole result.
+async function fetchAllCollectionItems<T>(
+  collection: string,
+  query: string,
+  preview: boolean,
+  variables: GraphQLVariables = {},
+): Promise<T[]> {
+  const items: T[] = [];
+
+  for (let skip = 0; ; skip += COLLECTION_PAGE_SIZE) {
+    const response = await fetchGraphQL<{
+      data?: Record<string, { total?: number; items?: T[] } | undefined>;
+    }>(query, preview, {
+      ...variables,
+      limit: COLLECTION_PAGE_SIZE,
+      skip,
+    });
+
+    const page = response?.data?.[collection];
+    const batch = page?.items ?? [];
+    items.push(...batch);
+
+    // An empty page always ends the loop, so a missing `total` cannot spin.
+    if (batch.length === 0 || items.length >= (page?.total ?? items.length)) {
+      return items;
+    }
+  }
+}
+
+function extractPost(fetchResponse: PostCollectionResponse): Post | undefined {
+  return fetchResponse?.data?.postCollection?.items?.[0];
+}
+
+// Every fetcher is memoised, and none declares a defaulted or optional
+// parameter: the memo key is the argument list, so `f()` and `f(false)` would
+// be two requests. Scheduling is Contentful's job; `date` is display metadata
+// and never a filter here.
+export const getAllPosts = memoise(
+  async (isDraftMode: boolean): Promise<ListPost[]> => {
+    return fetchAllCollectionItems<ListPost>(
+      "postCollection",
+      `query GetAllPosts($preview: Boolean, $limit: Int!, $skip: Int!) {
+      postCollection(where: { slug_exists: true }, order: date_DESC, preview: $preview, limit: $limit, skip: $skip) {
+        total
+        items {
+          ${LIST_GRAPHQL_FIELDS}
+        }
+      }
+    }`,
+      isDraftMode,
+      { preview: isDraftMode },
+    );
+  },
+);
+
+// One post, listing fragment only, with no related-posts queries. Only where
+// nothing else fetches the post in the same pass.
+export const getPost = memoise(
+  async (slug: string, preview: boolean): Promise<ListPost | undefined> => {
+    const entry = await fetchGraphQL<ListPostCollectionResponse>(
+      `query GetPostMeta($slug: String!, $preview: Boolean) {
+      postCollection(where: { slug: $slug }, preview: $preview, limit: 1) {
+        items {
+          ${LIST_GRAPHQL_FIELDS}
+        }
+      }
+    }`,
+      preview,
+      { slug, preview },
+    );
+
+    return entry?.data?.postCollection?.items?.[0];
+  },
+);
+
+export const getPostAndMorePosts = memoise(
+  async (
+    slug: string,
+    preview: boolean,
+  ): Promise<{ post: Post | undefined; morePosts: ListPost[] }> => {
+    const [entry, allPosts] = await Promise.all([
+      fetchGraphQL<PostCollectionResponse>(
+        `query GetPost($slug: String!, $preview: Boolean) {
+        postCollection(where: { slug: $slug }, preview: $preview, limit: 1) {
+          items {
+            ${POST_GRAPHQL_FIELDS}
+          }
+        }
+      }`,
+        preview,
+        { slug, preview },
+      ),
+      getAllPosts(preview),
+    ]);
+
+    const post = extractPost(entry);
+    const morePosts = post ? relatedPosts(post, allPosts) : [];
+
+    return { post, morePosts };
+  },
+);
+
+// de-DE has no fallback, so an untranslated field is null, never English. A post
+// counts as German once title and excerpt are filled.
+export const getGermanPostSlugs = memoise(
+  async (isDraftMode: boolean): Promise<string[]> => {
+    const items = await fetchAllCollectionItems<{
+      slug: string;
+      title: string | null;
+      excerpt: string | null;
+    }>(
+      "postCollection",
+      `query GetGermanPostSlugs($preview: Boolean, $limit: Int!, $skip: Int!) {
+      postCollection(where: { slug_exists: true }, locale: "${GERMAN_LOCALE}", order: date_DESC, preview: $preview, limit: $limit, skip: $skip) {
+        total
+        items {
+          slug
+          title
+          excerpt
+        }
+      }
+    }`,
+      isDraftMode,
+      { preview: isDraftMode },
+    );
+
+    return items.filter((p) => p.title && p.excerpt).map((p) => p.slug);
+  },
+);
+
+// Undefined unless title, excerpt and content are all German. Only those three
+// come from de-DE, plus an embed's alt and caption and a callout's text: the
+// locale cascades to links, and an asset's file has no German version, so
+// covers, portraits and images come from the English post.
+export const getGermanPostAndMorePosts = memoise(
+  async (
+    slug: string,
+    preview: boolean,
+  ): Promise<{ post: Post | undefined; morePosts: ListPost[] }> => {
+    const [entry, english] = await Promise.all([
+      fetchGraphQL<{
+        data?: {
+          postCollection?: {
+            items?: {
+              title: string | null;
+              excerpt: string | null;
+              content: {
+                json: Post["content"]["json"];
+                links?: {
+                  assets?: {
+                    block?: ({
+                      sys: { id: string };
+                      title: string | null;
+                      description: string | null;
+                    } | null)[];
+                  };
+                  entries?: {
+                    block?: ({
+                      __typename?: string;
+                      sys: { id: string };
+                      label?: string | null;
+                      body?: { json: Post["content"]["json"] } | null;
+                    } | null)[];
+                  };
+                };
+              } | null;
+            }[];
+          };
+        };
+      }>(
+        `query GetGermanPost($slug: String!, $preview: Boolean) {
+        postCollection(where: { slug: $slug }, locale: "${GERMAN_LOCALE}", preview: $preview, limit: 1) {
+          items {
+            title
+            excerpt
+            content {
+              json
+              # Text only: callouts, and an embed's alt and caption. Never a
+              # file or image field, which has no German and comes back null.
+              links {
+                assets {
+                  block {
+                    sys {
+                      id
+                    }
+                    title
+                    description
+                  }
+                }
+                entries {
+                  block {
+                    sys {
+                      id
+                    }
+                    __typename
+                    ... on Callout {
+                      label
+                      body {
+                        json
+                      }
+                    }
+                  }
+                }
+              }
+            }
+          }
+        }
+      }`,
+        preview,
+        { slug, preview },
+      ),
+      getPostAndMorePosts(slug, preview),
+    ]);
+
+    const german = entry?.data?.postCollection?.items?.[0];
+    if (
+      !english.post ||
+      !german?.title ||
+      !german.excerpt ||
+      !german.content?.json
+    ) {
+      return { post: undefined, morePosts: [] };
+    }
+
+    // German body, English links: an embed the English body lacks renders as
+    // nothing, which the renderer already handles. A callout turns German
+    // whole, label and body, or stays English and says so.
+    const germanCallouts = new Map(
+      (german.content.links?.entries?.block ?? [])
+        .filter(present)
+        .flatMap((e) =>
+          e.__typename === "Callout" && e.label && e.body?.json
+            ? [[e.sys.id, { label: e.label, json: e.body.json }] as const]
+            : [],
+        ),
+    );
+    const links = english.post.content.links;
+    const entryBlock = links.entries?.block.map((entry) => {
+      if (entry?.__typename !== "Callout") return entry;
+      const de = germanCallouts.get(entry.sys.id);
+      return de
+        ? { ...entry, label: de.label, body: { json: de.json } }
+        : { ...entry, lang: DEFAULT_LOCALE };
+    });
+    // An embed's alt and caption turn German together or not at all, so one
+    // figure never mixes languages: German once the title is, and the caption
+    // too wherever the English has one. Otherwise both stay English.
+    const germanAssets = new Map(
+      (german.content.links?.assets?.block ?? [])
+        .filter(present)
+        .flatMap((a) => (a.title ? [[a.sys.id, a] as const] : [])),
+    );
+    const block = links.assets.block.filter(present).map((asset) => {
+      const de = germanAssets.get(asset.sys.id);
+      if (!de?.title || (asset.description && !de.description)) return asset;
+      return {
+        ...asset,
+        title: de.title,
+        description: de.description ?? asset.description,
+        lang: GERMAN_LOCALE,
+      };
+    });
+    const post: Post = {
+      ...english.post,
+      title: german.title,
+      excerpt: german.excerpt,
+      content: {
+        json: german.content.json,
+        links: {
+          ...links,
+          assets: { ...links.assets, block },
+          ...(links.entries && {
+            entries: { ...links.entries, block: entryBlock ?? [] },
+          }),
+        },
+      },
+    };
+
+    return { post, morePosts: english.morePosts };
+  },
+);
+
+export const getPage = memoise(
+  async (slug: string, preview: boolean): Promise<Page | undefined> => {
+    const entry = await fetchGraphQL<PageCollectionResponse>(
+      `query GetPage($slug: String!, $preview: Boolean) {
+      pageCollection(where: { slug: $slug }, preview: $preview, limit: 1) {
+        items {
+          ${PAGE_GRAPHQL_FIELDS}
+        }
+      }
+    }`,
+      preview,
+      { slug, preview },
+    );
+
+    return entry?.data?.pageCollection?.items?.[0];
+  },
+);
+
+export const getAllPages = memoise(
+  async (isDraftMode: boolean): Promise<PageMeta[]> => {
+    return fetchAllCollectionItems<PageMeta>(
+      "pageCollection",
+      `query GetAllPages($preview: Boolean, $limit: Int!, $skip: Int!) {
+      pageCollection(where: { slug_exists: true }, preview: $preview, limit: $limit, skip: $skip) {
+        total
+        items {
+          slug
+          sys {
+            publishedAt
+            firstPublishedAt
+          }
+        }
+      }
+    }`,
+      isDraftMode,
+      { preview: isDraftMode },
+    );
+  },
+);
+
+// A separate query so descriptions stay out of every listing's fragment.
+export const getTagBySlug = memoise(
+  async (slug: string, isDraftMode: boolean): Promise<Tag | undefined> => {
+    const entries = await fetchGraphQL<TagCollectionResponse>(
+      `query GetTagBySlug($slug: String!, $preview: Boolean) {
+      tagCollection(where: { slug: $slug }, preview: $preview, limit: 1) {
+        items {
+          name
+          slug
+          description
+        }
+      }
+    }`,
+      isDraftMode,
+      { slug, preview: isDraftMode },
+    );
+
+    return entries?.data?.tagCollection?.items?.[0];
+  },
+);
+
+export const getAllCategories = memoise(
+  async (isDraftMode: boolean): Promise<Category[]> => {
+    return fetchAllCollectionItems<Category>(
+      "categoryCollection",
+      `query GetAllCategories($preview: Boolean, $limit: Int!, $skip: Int!) {
+      categoryCollection(where: { slug_exists: true }, order: name_ASC, preview: $preview, limit: $limit, skip: $skip) {
+        total
+        items {
+          name
+          slug
+          description
+        }
+      }
+    }`,
+      isDraftMode,
+      { preview: isDraftMode },
+    );
+  },
+);
+
+export const getCategoryBySlug = memoise(
+  async (slug: string, isDraftMode: boolean): Promise<Category | undefined> => {
+    const entries = await fetchGraphQL<CategoryCollectionResponse>(
+      `query GetCategory($slug: String!, $preview: Boolean) {
+      categoryCollection(where: { slug: $slug }, preview: $preview, limit: 1) {
+        items {
+          name
+          slug
+          description
+        }
+      }
+    }`,
+      isDraftMode,
+      { slug, preview: isDraftMode },
+    );
+
+    return entries?.data?.categoryCollection?.items?.[0];
+  },
+);
+
+export const getAuthorBySlug = memoise(
+  async (slug: string, isDraftMode: boolean): Promise<Author | undefined> => {
+    const entries = await fetchGraphQL<AuthorCollectionResponse>(
+      `query GetAuthor($slug: String!, $preview: Boolean) {
+      authorCollection(where: { slug: $slug }, preview: $preview, limit: 1) {
+        items {
+          name
+          slug
+          bio {
+            json
+            links {
+              assets {
+                block {
+                  ${ASSET_BLOCK_FIELDS}
+                }
+              }
+            }
+          }
+          picture { url }
+        }
+      }
+    }`,
+      isDraftMode,
+      { slug, preview: isDraftMode },
+    );
+
+    return entries?.data?.authorCollection?.items?.[0];
+  },
+);
+
+// No getPostsByAuthor: author pages filter getAllPosts.
+
+export const getAllAuthors = memoise(
+  async (isDraftMode: boolean): Promise<Author[]> => {
+    return fetchAllCollectionItems<Author>(
+      "authorCollection",
+      `query GetAllAuthors($preview: Boolean, $limit: Int!, $skip: Int!) {
+      authorCollection(where: { slug_exists: true }, order: name_ASC, preview: $preview, limit: $limit, skip: $skip) {
+        total
+        items {
+          name
+          slug
+          picture { url }
+        }
+      }
+    }`,
+      isDraftMode,
+      { preview: isDraftMode },
+    );
+  },
+);
