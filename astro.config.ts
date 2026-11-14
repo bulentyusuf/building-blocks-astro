@@ -5,6 +5,7 @@ import cloudflare from "@astrojs/cloudflare";
 import tailwindcss from "@tailwindcss/vite";
 import { loadEnv } from "vite";
 import { ogCards } from "./integrations/og-cards";
+import { searchIndex } from "./integrations/search-index";
 import { indexingAllowed, staticHeadersFile } from "./src/lib/security-headers";
 
 const variable = "./node_modules/@fontsource-variable";
@@ -34,7 +35,7 @@ export default defineConfig({
   build: { format: "file" },
   adapter: cloudflare({ imageService: "passthrough" }),
   session: false,
-  integrations: [staticHeaders, ogCards()],
+  integrations: [staticHeaders, ogCards(), searchIndex()],
   // Self-hosted from the installed font packages, so a build needs no font
   // service. Latin only. The variable faces carry their whole weight range and
   // the optical-size axis in one file per style.

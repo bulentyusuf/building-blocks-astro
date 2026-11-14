@@ -14,5 +14,9 @@
       "CONTENTFUL_PREVIEW_SECRET"
     ]
   },
+  // Stated, so this file and the dashboard agree: the workers.dev address and
+  // a preview address per branch build are both on.
+  "workers_dev": true,
+  "preview_urls": true,
   "observability": { "enabled": true }
 }
