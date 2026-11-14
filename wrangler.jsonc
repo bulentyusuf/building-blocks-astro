@@ -1,0 +1,18 @@
+{
+  "$schema": "node_modules/wrangler/config-schema.json",
+  "name": "building-blocks-astro",
+  "compatibility_date": "2026-11-01",
+  // node:crypto and node:async_hooks on the on-demand routes.
+  "compatibility_flags": ["nodejs_compat"],
+  // Names only. Locally and at build these are read from .dev.vars, .env or
+  // the environment, and nothing else in the environment is passed through.
+  "secrets": {
+    "required": [
+      "CONTENTFUL_SPACE_ID",
+      "CONTENTFUL_ACCESS_TOKEN",
+      "CONTENTFUL_PREVIEW_ACCESS_TOKEN",
+      "CONTENTFUL_PREVIEW_SECRET"
+    ]
+  },
+  "observability": { "enabled": true }
+}
