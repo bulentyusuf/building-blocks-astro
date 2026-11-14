@@ -4,8 +4,8 @@ Building blocks for building blogs, redux. The source of
 [beuseful.net](https://beuseful.net): an Astro site on Cloudflare Workers,
 with content from Contentful.
 
-Public pages are built once and served as static files. The Worker runs only
-for draft previews.
+Public pages are built once and served as static files, each post's social
+card included. The Worker runs only for draft previews.
 
 ## Setup
 

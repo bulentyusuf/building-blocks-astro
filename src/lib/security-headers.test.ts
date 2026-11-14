@@ -129,6 +129,11 @@ describe("the static headers file", () => {
     }
   });
 
+  it("serves a post's social card as a PNG, whatever its file name", () => {
+    const pattern = "/posts/:slug/opengraph-image";
+    expect(open).toContain(`${pattern}\n  Content-Type: image/png`);
+  });
+
   it("would intersect two policies if a relaxed rule did not detach", () => {
     // Known-bad control: without the detach line the base policy survives
     // beside the relaxed one, and the resolver must show it.

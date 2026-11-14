@@ -92,7 +92,11 @@ export function staticHeadersFile({
       `  ${CSP}: ${contentSecurityPolicy({ wasm: true })}`,
     ].join("\n"),
   );
-  return [block("/*", base), ...relaxed].join("\n\n") + "\n";
+  // The cards have no file extension for the host to read a type from.
+  const cards = block("/posts/:slug/opengraph-image", {
+    "Content-Type": "image/png",
+  });
+  return [block("/*", base), ...relaxed, cards].join("\n\n") + "\n";
 }
 
 /** Only the exact word opens the site to crawlers, so a typo fails closed. */
