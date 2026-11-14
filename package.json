@@ -9,8 +9,7 @@
     "dev": "astro dev",
     "build": "astro check && astro build",
     "preview": "astro preview",
-    "test": "vitest run",
-    "check:parity": "node scripts/url-parity.mjs"
+    "test": "vitest run"
   },
   "dependencies": {
     "@astrojs/cloudflare": "^14.4.8",

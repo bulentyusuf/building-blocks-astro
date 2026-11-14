@@ -30,6 +30,31 @@ and must match the `secret` in the space's preview URL.
 | `npm run preview` | Serve the build locally, in the Workers runtime       |
 | `npm test`        | Unit tests                                            |
 
+`npm run preview` is the one to trust for anything the Worker does: it runs
+the build in the same runtime as production.
+
+## Draft previews
+
+In the Contentful space, set the Post preview URL to:
+
+```
+https://<site>/api/draft?secret=<CONTENTFUL_PREVIEW_SECRET>&slug={entry.fields.slug}&locale={locale}
+```
+
+The link checks the secret, starts a preview session and opens the draft at
+`/preview/posts/<slug>`, or `/preview/de/posts/<slug>` for German. The "Exit
+preview" button ends the session.
+
+## URL parity
+
+```bash
+node scripts/url-parity.mjs https://beuseful.net http://localhost:4321
+```
+
+Requests every path in the first site's sitemap from both sites and prints any
+that answer differently. A third argument names a config module whose
+`redirects()` sources are checked too.
+
 ## Indexing
 
 A build is closed to search engines by default: every response carries

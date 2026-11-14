@@ -4,7 +4,7 @@ import type { Document } from "@contentful/rich-text-types";
 import { extractHeadings, hasTableOfContents, MIN_HEADINGS } from "./headings";
 
 // Minimal rich-text node builders, matching the fixture shape in
-// rich-text.test.tsx.
+// rich-text.test.ts.
 const text = (value: string) => ({
   nodeType: "text",
   value,

@@ -4,8 +4,7 @@ import { isPlaceholderTitle, filenameStem } from "./placeholder-title";
 // The known-bad control this guard is measured against.
 // Every string below was a real `title` in the live space on 11 August 2026,
 // when the whole library used the field as a filing label. They stay here
-// permanently, exactly as app/posts/[slug]/opengraph-image.font.test.tsx keeps
-// Piazzolla: a guard that asserts the absence of a defect passes for two
+// permanently: a guard that asserts the absence of a defect passes for two
 // reasons, and only a case that still fails tells the two apart.
 // Do not "tidy" these into invented examples. Their value is that they shipped.
 const PLACEHOLDERS: ReadonlyArray<[string, string | undefined]> = [

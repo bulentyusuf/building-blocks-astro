@@ -1,0 +1,30 @@
+# Exact paths first: the host checks them before any rule with a placeholder.
+
+# Renamed post slugs that still get visits. An archived post stays a 404 unless
+# a published post replaces it.
+/posts/static-site-search /posts/static-site-search-pagefind 308
+
+# Main Quest became Blogging. Side Quests split in two, so it lands on home,
+# where both chips are.
+/categories/main-quest /categories/blogging 308
+/categories/side-quests / 308
+
+# No index pages for strands or writers: the chips and the footer are the way in.
+/categories / 308
+/authors /about 308
+
+# Tags never repeat a strand, so these two retired into theirs.
+/tags/film /categories/films 308
+/tags/blogging /categories/blogging 308
+
+# Home and the listing pages have no pager.
+/page/:n /archive 308
+/categories/:slug/page/:n /categories/:slug 308
+/tags/:slug/page/:n /tags/:slug 308
+/authors/:slug/page/:n /authors/:slug 308
+
+# Anything under a retired strand or tag follows it.
+/categories/main-quest/* /categories/blogging 308
+/categories/side-quests/* / 308
+/tags/film/* /categories/films 308
+/tags/blogging/* /categories/blogging 308

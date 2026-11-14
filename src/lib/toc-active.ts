@@ -2,7 +2,7 @@
 // line, html's scroll-padding-top from the viewport top. Do not let a heading entering the lower viewport win: that
 // once jumped the highlight a screenful early.
 
-/** Fallback for a computed `auto`. globals.css is the source of truth. */
+/** Fallback for a computed `auto`. global.css is the source of truth. */
 export const FALLBACK_BAND_TOP_PX = 80;
 
 /** Sub-pixel slack, so a heading parked exactly on the line counts as passed. */

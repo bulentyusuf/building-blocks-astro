@@ -346,7 +346,7 @@ function extractPost(fetchResponse: PostCollectionResponse): Post | undefined {
 // be two requests. Scheduling is Contentful's job; `date` is display metadata
 // and never a filter here.
 export const getAllPosts = memoise(
-  async (isDraftMode: boolean): Promise<ListPost[]> => {
+  async (preview: boolean): Promise<ListPost[]> => {
     return fetchAllCollectionItems<ListPost>(
       "postCollection",
       `query GetAllPosts($preview: Boolean, $limit: Int!, $skip: Int!) {
@@ -357,8 +357,8 @@ export const getAllPosts = memoise(
         }
       }
     }`,
-      isDraftMode,
-      { preview: isDraftMode },
+      preview,
+      { preview },
     );
   },
 );
@@ -413,7 +413,7 @@ export const getPostAndMorePosts = memoise(
 // de-DE has no fallback, so an untranslated field is null, never English. A post
 // counts as German once title and excerpt are filled.
 export const getGermanPostSlugs = memoise(
-  async (isDraftMode: boolean): Promise<string[]> => {
+  async (preview: boolean): Promise<string[]> => {
     const items = await fetchAllCollectionItems<{
       slug: string;
       title: string | null;
@@ -430,8 +430,8 @@ export const getGermanPostSlugs = memoise(
         }
       }
     }`,
-      isDraftMode,
-      { preview: isDraftMode },
+      preview,
+      { preview },
     );
 
     return items.filter((p) => p.title && p.excerpt).map((p) => p.slug);
@@ -609,7 +609,7 @@ export const getPage = memoise(
 );
 
 export const getAllPages = memoise(
-  async (isDraftMode: boolean): Promise<PageMeta[]> => {
+  async (preview: boolean): Promise<PageMeta[]> => {
     return fetchAllCollectionItems<PageMeta>(
       "pageCollection",
       `query GetAllPages($preview: Boolean, $limit: Int!, $skip: Int!) {
@@ -624,15 +624,15 @@ export const getAllPages = memoise(
         }
       }
     }`,
-      isDraftMode,
-      { preview: isDraftMode },
+      preview,
+      { preview },
     );
   },
 );
 
 // A separate query so descriptions stay out of every listing's fragment.
 export const getTagBySlug = memoise(
-  async (slug: string, isDraftMode: boolean): Promise<Tag | undefined> => {
+  async (slug: string, preview: boolean): Promise<Tag | undefined> => {
     const entries = await fetchGraphQL<TagCollectionResponse>(
       `query GetTagBySlug($slug: String!, $preview: Boolean) {
       tagCollection(where: { slug: $slug }, preview: $preview, limit: 1) {
@@ -643,8 +643,8 @@ export const getTagBySlug = memoise(
         }
       }
     }`,
-      isDraftMode,
-      { slug, preview: isDraftMode },
+      preview,
+      { slug, preview },
     );
 
     return entries?.data?.tagCollection?.items?.[0];
@@ -652,7 +652,7 @@ export const getTagBySlug = memoise(
 );
 
 export const getAllCategories = memoise(
-  async (isDraftMode: boolean): Promise<Category[]> => {
+  async (preview: boolean): Promise<Category[]> => {
     return fetchAllCollectionItems<Category>(
       "categoryCollection",
       `query GetAllCategories($preview: Boolean, $limit: Int!, $skip: Int!) {
@@ -665,14 +665,14 @@ export const getAllCategories = memoise(
         }
       }
     }`,
-      isDraftMode,
-      { preview: isDraftMode },
+      preview,
+      { preview },
     );
   },
 );
 
 export const getCategoryBySlug = memoise(
-  async (slug: string, isDraftMode: boolean): Promise<Category | undefined> => {
+  async (slug: string, preview: boolean): Promise<Category | undefined> => {
     const entries = await fetchGraphQL<CategoryCollectionResponse>(
       `query GetCategory($slug: String!, $preview: Boolean) {
       categoryCollection(where: { slug: $slug }, preview: $preview, limit: 1) {
@@ -683,8 +683,8 @@ export const getCategoryBySlug = memoise(
         }
       }
     }`,
-      isDraftMode,
-      { slug, preview: isDraftMode },
+      preview,
+      { slug, preview },
     );
 
     return entries?.data?.categoryCollection?.items?.[0];
@@ -692,7 +692,7 @@ export const getCategoryBySlug = memoise(
 );
 
 export const getAuthorBySlug = memoise(
-  async (slug: string, isDraftMode: boolean): Promise<Author | undefined> => {
+  async (slug: string, preview: boolean): Promise<Author | undefined> => {
     const entries = await fetchGraphQL<AuthorCollectionResponse>(
       `query GetAuthor($slug: String!, $preview: Boolean) {
       authorCollection(where: { slug: $slug }, preview: $preview, limit: 1) {
@@ -713,8 +713,8 @@ export const getAuthorBySlug = memoise(
         }
       }
     }`,
-      isDraftMode,
-      { slug, preview: isDraftMode },
+      preview,
+      { slug, preview },
     );
 
     return entries?.data?.authorCollection?.items?.[0];
@@ -724,7 +724,7 @@ export const getAuthorBySlug = memoise(
 // No getPostsByAuthor: author pages filter getAllPosts.
 
 export const getAllAuthors = memoise(
-  async (isDraftMode: boolean): Promise<Author[]> => {
+  async (preview: boolean): Promise<Author[]> => {
     return fetchAllCollectionItems<Author>(
       "authorCollection",
       `query GetAllAuthors($preview: Boolean, $limit: Int!, $skip: Int!) {
@@ -737,8 +737,8 @@ export const getAllAuthors = memoise(
         }
       }
     }`,
-      isDraftMode,
-      { preview: isDraftMode },
+      preview,
+      { preview },
     );
   },
 );

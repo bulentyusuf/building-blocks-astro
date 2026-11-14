@@ -6,9 +6,9 @@ import { widont } from "./typography";
 // widont's job is to stop a heading ending on a lone word. Its failure mode is
 // the opposite one and it is worse: glue too much and the string cannot wrap at
 // all, so it overflows its column instead of merely wrapping badly.
-// rich-text.test.tsx covers the rendered path, a heading with a trailing
-// parenthesised year, through documentToReactComponents. This covers the
-// function itself, where the token-count boundary lives.
+// rich-text.test.ts covers the rendered path, a heading with a trailing
+// parenthesised year. This covers the function itself, where the token-count
+// boundary lives.
 
 const NBSP = String.fromCharCode(0x00a0);
 

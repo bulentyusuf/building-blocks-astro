@@ -6,9 +6,7 @@ export interface Heading {
   slug: string;
 }
 
-// Below three headings a ToC is as long as the article. It lives here, not in
-// the "use client" ToC, because a server component importing a value across
-// that boundary gets a client reference, and compared against undefined.
+// Below three headings a contents list is as long as the article.
 export const MIN_HEADINGS = 3;
 
 // The one answer to "does this post get a ToC?", shared by the page's margin

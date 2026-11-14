@@ -4,7 +4,7 @@ import type { Document } from "@contentful/rich-text-types";
 import { readingTimeMinutes } from "./reading-time";
 
 // Minimal rich-text node builders, matching the shapes used in
-// rich-text.test.tsx.
+// rich-text.test.ts.
 const text = (value: string) => ({
   nodeType: "text",
   value,
