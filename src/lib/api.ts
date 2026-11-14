@@ -8,8 +8,6 @@ import type {
   PostCollectionResponse,
   ListPost,
   ListPostCollectionResponse,
-  CardPost,
-  CardPostCollectionResponse,
   Page,
   PageCollectionResponse,
   PageMeta,

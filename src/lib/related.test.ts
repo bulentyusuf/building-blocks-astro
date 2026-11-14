@@ -1,5 +1,5 @@
 import { describe, it, expect } from "vitest";
-import { relatedPosts, RELATED_COUNT } from "./related";
+import { relatedPosts } from "./related";
 
 const PINNED_NOW = new Date("2026-09-03T12:00:00Z").getTime();
 
