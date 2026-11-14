@@ -29,9 +29,20 @@ and must match the `secret` in the space's preview URL.
 | `npm run build`   | Type-check, then build to `dist/`               |
 | `npm run preview` | Serve the build locally, in the Workers runtime |
 | `npm test`        | Unit tests                                      |
+| `npm run check`   | Type-check only                                 |
+| `npm run format`  | Format every file with Prettier                 |
 
 `npm run preview` is the one to trust for anything the Worker does: it runs
 the build in the same runtime as production.
+
+Every pull request runs the format check, the type check and the tests on
+GitHub. Cloudflare builds the branch and reports there too.
+
+## Search
+
+The search index is written at the end of every build, from the built pages.
+A post published in Contentful appears in search, and anywhere else on the
+site, after the next build.
 
 ## Draft previews
 
