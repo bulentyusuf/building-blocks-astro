@@ -1,0 +1,24 @@
+---
+import type { Tag } from "../lib/types";
+
+// One tag for cards and the post page, written as #tag. A 2px ink edge and an
+// 8px radius: the edge marks it as a control.
+interface Props {
+  tag: Tag;
+  /** Default is the post's tag row, 44px tall to tap; compact sits on cards. */
+  size?: "default" | "compact";
+}
+const { tag, size = "default" } = Astro.props;
+const SIZES = {
+  default: "min-h-11 px-3 text-[0.9375rem]",
+  compact: "px-2 py-1 text-sm",
+};
+---
+
+<a
+  href={`/tags/${tag.slug}`}
+  class:list={[
+    "tap-area inline-flex items-center rounded-lg border-2 border-outline bg-card font-ui font-semibold transition-colors duration-200 hover:text-brand-crimson",
+    SIZES[size],
+  ]}><span aria-hidden="true">#</span>{tag.name}</a
+>

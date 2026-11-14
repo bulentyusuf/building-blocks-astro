@@ -1,0 +1,351 @@
+@import "tailwindcss";
+
+/* Documentation names classes in prose and ships no markup, so it stays out of
+   the scan. */
+@source not "../../CLAUDE.md";
+@source not "../../README.md";
+@source not "../../.claude";
+
+@plugin '@tailwindcss/typography';
+
+@theme {
+  /* Four roles, three faces. Nothing in a component names a family, and
+     --default-font-family is what Preflight puts on <body>. */
+  --font-display: var(--font-bricolage);
+  --font-body: var(--font-literata);
+  --font-ui: var(--font-bricolage);
+  --font-mono:
+    var(--font-plex-mono), ui-monospace, SFMono-Regular, Menlo, Consolas,
+    "Liberation Mono", monospace;
+  --default-font-family: var(--font-body);
+
+  /* Corner radius by role. Controls keep rounded-xl, pills and portraits
+     rounded-full. */
+  --radius-container: 1.25rem;
+  --radius-content: 0.375rem;
+  --radius-nested: 0.25rem;
+
+  /* The site frame: 1200px at a 16px root, inside 40px gutters (16px on
+     phones). Every page edge lines up on it. */
+  --container-frame: 75rem;
+
+  --color-brand-crimson: #9e2238;
+  --color-brand-dark: #241b1d;
+  /* Every 3px ink edge. The ink in light; grey in dark, so edges read as
+     drawing, not glowing bars. */
+  --color-outline: #241b1d;
+  --color-brand-bg: #faf5f1;
+  --color-brand-muted: #6b5a52;
+
+  /* Strand fills carry cream text in both schemes, so they do not invert. The
+     shadows lift in dark mode, below. */
+  --color-strand-blogging: #9e2238;
+  --color-strand-films: #1f7a72;
+  --color-strand-games: #1e3a8a;
+  --color-on-strand: #faf5f1;
+  --color-strand-blogging-shadow: #9e2238;
+  --color-strand-films-shadow: #1f7a72;
+  --color-strand-games-shadow: #1e3a8a;
+  /* The raised surface of a card or chip. */
+  --color-card: #ffffff;
+  /* The quiet edge on things you read rather than press. Ink means pressable. */
+  --color-edge-quiet: #c9b5a7;
+  /* The graph-paper dots on the page, decoration only. */
+  --color-dots: #eee5de;
+  /* The sidebar tape: the prompt label's yellow at 62%. */
+  --color-tape: rgb(242 193 78 / 0.62);
+
+  /* Divider hairline, inverting with the scheme. Frame borders and the control
+     edge are separate roles and do not use this. */
+  --color-hairline: #e5e7eb;
+
+  /* The edge around a cover image. Literal values: color-mix() over a var()
+     is flattened behind an @supports with a light fallback. */
+  --color-cover-keyline: rgb(250 245 241 / 0.75);
+
+  /* Always dark, in both schemes. brand-dark is body ink and inverts, so
+     anything that must stay dark points here. */
+  --color-surface-dark: #241b1d;
+  /* The label inside the prompt block, on surface-dark. */
+  --color-prompt-label: #f2c14e;
+  /* Inline code is coloured text with no box, AAA on the page and the panel. */
+  --color-code-ink: #1a5e33;
+
+  /* Tables: edge and header rule at 28% of the crimson, row rules at 18%, the
+     header fill at 12%. color-mix, so all three follow the token into dark. */
+  --color-table-edge: color-mix(
+    in srgb,
+    var(--color-brand-crimson) 28%,
+    transparent
+  );
+  --color-table-rule: color-mix(
+    in srgb,
+    var(--color-brand-crimson) 18%,
+    transparent
+  );
+  --color-table-header: color-mix(
+    in srgb,
+    var(--color-brand-crimson) 12%,
+    transparent
+  );
+
+  --spacing-section: 4rem;
+}
+
+/* Dark mode follows the OS: no toggle, no class, no stored preference, so
+   there is no flash. Only values change here, never a token's name. */
+@media (prefers-color-scheme: dark) {
+  :root {
+    --color-brand-bg: #18181b;
+    --color-brand-dark: #ededee;
+    --color-outline: #c8c5c2;
+    --color-brand-muted: #b3b3b8;
+    /* Lifted so links clear AAA on the charcoal page. */
+    --color-brand-crimson: #f28a9b;
+    --color-hairline: rgb(237 237 238 / 0.15);
+    --color-cover-keyline: rgb(237 237 238 / 0.18);
+    --color-card: #242327;
+    /* The code theme's ground, so a code block's bar and body match. */
+    --color-surface-dark: #1f1f1f;
+    --color-code-ink: #9fe0a8;
+    --color-edge-quiet: #403f44;
+    --color-dots: #2a292d;
+    /* At least 3:1 on the page, so a shadow reads as a stamp, not a glow. */
+    --color-strand-blogging-shadow: #b8304a;
+    --color-strand-films-shadow: #1f7a72;
+    --color-strand-games-shadow: #3f5fc8;
+  }
+}
+
+/* Graph paper: a 1.5px dot every 22px, on the page only. Cards and panels
+   paint their own ground over it. */
+@layer base {
+  body {
+    background-image: radial-gradient(
+      var(--color-dots) 1.5px,
+      transparent 1.5px
+    );
+    background-size: 22px 22px;
+  }
+}
+
+/* The default border colour is the divider hairline, not currentcolor. */
+@layer base {
+  *,
+  ::after,
+  ::before,
+  ::backdrop,
+  ::file-selector-button {
+    border-color: var(--color-hairline, currentcolor);
+  }
+}
+
+/* Top-level headings take the display face here, the one mechanism. h4 and
+   below stay in the body face, which is why footer labels are <p>. */
+@layer base {
+  h1,
+  h2,
+  h3 {
+    font-family: var(--font-display);
+    font-weight: 700;
+    letter-spacing: -0.005em;
+  }
+}
+
+html {
+  /* The one scroll offset, and the line the contents box reads to mark the
+     active entry. Never add a scroll-margin beside it: the two add. */
+  scroll-padding-top: 5rem;
+
+  /* Reserves the scrollbar's column on short pages, so the centred layout
+     does not step sideways between pages. Not scrollbar-gutter, which Firefox
+     on macOS paints as a visible empty track. */
+  overflow-y: scroll;
+}
+
+/* The lightbox's scroll lock. showModal() makes the page inert but leaves it
+   scrollable, and html is the scroller because of the rule above. */
+html:has(dialog:modal) {
+  overflow: hidden;
+  scrollbar-gutter: stable;
+}
+
+/* One focus indicator for the whole site. Crimson clears 3:1 on both grounds
+   and swaps with the scheme on its own. */
+@layer base {
+  :focus-visible {
+    outline: 2px solid var(--color-brand-crimson);
+    outline-offset: 2px;
+    border-radius: 2px;
+  }
+}
+
+::selection {
+  background-color: var(--color-brand-crimson);
+  color: var(--color-brand-bg);
+}
+
+/* A 44px tap area on touch screens, centred on the control, moving nothing.
+   With a mouse the control keeps its own size. */
+@utility tap-area {
+  position: relative;
+  @media (pointer: coarse) {
+    &::before {
+      content: "";
+      position: absolute;
+      top: 50%;
+      left: 50%;
+      width: max(100%, 2.75rem);
+      height: max(100%, 2.75rem);
+      transform: translate(-50%, -50%);
+    }
+  }
+}
+
+@utility prose {
+  /* The plugin measures in ch, which drifts with the body face. The measure
+     lives on the column's parent, in rem, and nowhere else. */
+  max-width: none;
+
+  /* An unbreakable URL or command would widen the document and scroll the
+     whole page sideways on a phone. break-word leaves ordinary prose alone. */
+  overflow-wrap: break-word;
+
+  /* Up from the plugin's 1rem: Literata's x-height reads about 7% small.
+     Every size inside the column is em-based; do not pin one in rem. */
+  font-size: 1.125rem;
+
+  /* Cell padding in em against the prose size. The :not() guard keeps these
+     from reaching through a not-prose wrapper and outranking its utilities. */
+  & :is(th, td):not(:where([class~="not-prose"] *)) {
+    padding-block: 0.5em;
+    padding-inline: 0.75em;
+  }
+
+  & :is(th, td):first-child:not(:where([class~="not-prose"] *)) {
+    padding-inline-start: 0;
+  }
+
+  & :is(th, td):last-child:not(:where([class~="not-prose"] *)) {
+    padding-inline-end: 0;
+  }
+
+  /* Brand tokens for the plugin's palette. They win only while this block is
+     emitted after the plugin's defaults. Code and pre stay unmapped. */
+  --tw-prose-body: var(--color-brand-dark);
+  --tw-prose-headings: var(--color-brand-dark);
+  --tw-prose-lead: var(--color-brand-muted);
+  --tw-prose-links: var(--color-brand-crimson);
+  --tw-prose-bold: var(--color-brand-dark);
+  --tw-prose-counters: var(--color-brand-muted);
+  --tw-prose-bullets: var(--color-brand-muted);
+  --tw-prose-hr: color-mix(in srgb, var(--color-brand-dark) 10%, transparent);
+  --tw-prose-quotes: var(--color-brand-dark);
+  --tw-prose-quote-borders: var(--color-brand-crimson);
+  --tw-prose-captions: var(--color-brand-muted);
+  --tw-prose-th-borders: var(--color-hairline);
+  --tw-prose-td-borders: color-mix(
+    in srgb,
+    var(--color-hairline) 60%,
+    transparent
+  );
+
+  /* The plugin's heading rule outranks the base-layer one, so the weight is
+     restated here. It must track that rule: both are the same heading. */
+  & :where(h1, h2, h3):not(:where([class~="not-prose"] *)) {
+    font-weight: 700;
+  }
+  & :where(code):not(:where([class~="not-prose"] *)) {
+    font-family: var(--font-mono);
+    font-weight: 400;
+    font-style: normal;
+    color: var(--color-code-ink);
+    /* Mono spaces are wider than the body's, so code would crowd its
+       neighbours without this. */
+    padding-inline: 0.15em;
+    font-size: 0.9em;
+  }
+  & :where(code):not(:where([class~="not-prose"] *))::before {
+    content: none;
+  }
+  & :where(code):not(:where([class~="not-prose"] *))::after {
+    content: none;
+  }
+}
+
+/* Thin light strokes read faint on a dark ground. */
+@media (prefers-color-scheme: dark) {
+  .prose :where(code):not(:where([class~="not-prose"] *)) {
+    font-weight: 500;
+  }
+}
+
+/* A reader landing on a heading's fragment gets a brief highlight. Box-shadow
+   spread, so nothing shifts. Reduced motion gets no flash at all. */
+@media (prefers-reduced-motion: no-preference) {
+  .prose h2:target {
+    border-radius: 0.25rem;
+    animation: target-flash 1.8s ease-out 1;
+  }
+
+  /* A ring only: animating the background would wash out the ink fill. */
+  #cover-prompt:target {
+    animation: target-ring 1.8s ease-out 1;
+  }
+}
+
+/* The crimson wash goes muddy on charcoal, so dark mode flashes the ink. */
+@media (prefers-reduced-motion: no-preference) and (prefers-color-scheme: dark) {
+  .prose h2:target {
+    animation-name: target-flash-dark;
+  }
+  #cover-prompt:target {
+    animation-name: target-ring-dark;
+  }
+}
+
+@keyframes target-ring {
+  from {
+    box-shadow: 0 0 0 0.4rem
+      color-mix(in srgb, var(--color-brand-crimson) 45%, transparent);
+  }
+  to {
+    box-shadow: 0 0 0 0.4rem transparent;
+  }
+}
+
+@keyframes target-ring-dark {
+  from {
+    box-shadow: 0 0 0 0.4rem rgb(237 237 238 / 0.3);
+  }
+  to {
+    box-shadow: 0 0 0 0.4rem transparent;
+  }
+}
+
+@keyframes target-flash-dark {
+  from {
+    background-color: rgb(237 237 238 / 0.14);
+    box-shadow: 0 0 0 0.4rem rgb(237 237 238 / 0.14);
+  }
+  to {
+    background-color: transparent;
+    box-shadow: 0 0 0 0.4rem transparent;
+  }
+}
+
+@keyframes target-flash {
+  from {
+    background-color: color-mix(
+      in srgb,
+      var(--color-brand-crimson) 18%,
+      transparent
+    );
+    box-shadow: 0 0 0 0.4rem
+      color-mix(in srgb, var(--color-brand-crimson) 18%, transparent);
+  }
+  to {
+    background-color: transparent;
+    box-shadow: 0 0 0 0.4rem transparent;
+  }
+}

@@ -1,0 +1,92 @@
+---
+import { STRANDS } from "../lib/strands";
+
+// The header's chips on every page. Links, not filters: home and a strand page
+// press their own chip as aria-current="page"; a post presses its strand as
+// "true", since the chip links away.
+interface Props {
+  current: { slug: string; onPost: boolean } | null;
+}
+const { current } = Astro.props;
+const mark = current?.onPost ? "true" : "page";
+
+// Below md the chips are one row that scrolls sideways, sized so the last chip
+// is cut off at the edge, the cue that there is more.
+const chip =
+  "flex h-11 shrink-0 items-center gap-2.5 whitespace-nowrap rounded-xl border-[3px] border-outline pr-3 pl-2.5 font-display text-[0.9375rem] font-[800] transition-[translate,box-shadow] duration-150 motion-reduce:transition-none md:h-12 md:px-4 md:text-lg";
+// Raised until hovered. Pressed is the same chip already pushed in, flat.
+// Every fill is opaque, so the graph paper never shows through.
+const raised = "bg-card hover:translate-[4px] hover:shadow-none";
+const pressed = "translate-[4px]";
+const dot = "size-[18px] shrink-0 rounded-full border-2 border-brand-dark";
+const all = current?.slug === "all";
+---
+
+<nav
+  aria-label="Strands"
+  data-strands
+  class="order-last -mx-4 flex w-[calc(100%+2rem)] items-center gap-2 overflow-x-auto px-4 pb-1.5 md:order-none md:mx-0 md:w-auto md:flex-wrap md:gap-5 md:overflow-visible md:px-0 md:pb-0 [scrollbar-width:none] data-more:[mask-image:linear-gradient(to_right,black_calc(100%-3rem),transparent)]"
+>
+  <a
+    href="/"
+    aria-current={all ? mark : undefined}
+    class:list={[
+      chip,
+      all
+        ? `${pressed} bg-[color-mix(in_oklab,var(--color-brand-dark)_5%,var(--color-brand-bg))]`
+        : `${raised} shadow-[4px_4px_0_var(--color-brand-crimson)]`,
+    ]}>All</a
+  >
+  {
+    STRANDS.map((strand) => {
+      const on = current?.slug === strand.slug;
+      return (
+        <a
+          href={`/categories/${strand.slug}`}
+          aria-current={on ? mark : undefined}
+          class:list={[
+            chip,
+            "md:pl-3",
+            on
+              ? `${pressed} ${strand.fill} text-on-strand`
+              : `${raised} ${strand.shadow}`,
+          ]}
+        >
+          <span
+            aria-hidden="true"
+            class:list={[dot, on ? "bg-on-strand" : strand.fill]}
+          />
+          {strand.label}
+        </a>
+      );
+    })
+  }
+</nav>
+
+<script>
+  const nav = document.querySelector<HTMLElement>("[data-strands]");
+  if (nav) {
+    // A pressed chip cut off at the edge scrolls fully into view. scrollLeft,
+    // not scrollIntoView, so the page never moves.
+    const on = nav.querySelector<HTMLElement>("[aria-current]");
+    if (on) {
+      const over =
+        on.getBoundingClientRect().right -
+        (nav.getBoundingClientRect().right -
+          parseFloat(getComputedStyle(nav).paddingRight));
+      if (over > 0) nav.scrollLeft += over;
+    }
+
+    // While more chips lie past the right edge, the row fades out there. The
+    // cut-off chip alone is not enough: a chip edge can land on the screen edge.
+    const check = () =>
+      nav.toggleAttribute(
+        "data-more",
+        getComputedStyle(nav).overflowX !== "visible" &&
+          nav.scrollWidth - nav.clientWidth - nav.scrollLeft > 1,
+      );
+    check();
+    nav.addEventListener("scroll", check, { passive: true });
+    window.addEventListener("resize", check);
+  }
+</script>

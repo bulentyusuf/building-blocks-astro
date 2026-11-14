@@ -1,0 +1,38 @@
+---
+import PostStream from "../components/PostStream.astro";
+import Layout from "../layouts/Layout.astro";
+import { getAllPosts } from "../lib/api";
+import {
+  HOME_DESCRIPTION,
+  HOME_TITLE,
+  SITE_TITLE,
+  SITE_URL,
+} from "../lib/constants";
+import { visibleTagSlugs } from "../lib/tags";
+
+// The feature card and five cards, then the archive. No pager.
+const STREAM_POSTS = 6;
+
+const allPosts = await getAllPosts(false);
+---
+
+<Layout title={HOME_TITLE} description={HOME_DESCRIPTION} canonical={SITE_URL}>
+  <div class="mx-auto max-w-frame px-4 md:px-10 pt-6 pb-16">
+    <!-- The logo names the site visually; this names the page. -->
+    <h1 class="sr-only">{SITE_TITLE}</h1>
+
+    <PostStream
+      posts={allPosts.slice(0, STREAM_POSTS)}
+      visibleTags={visibleTagSlugs(allPosts)}
+      showStrand
+    />
+
+    <div class="mt-12 flex justify-center">
+      <a
+        href="/archive"
+        class="inline-flex min-h-11 items-center rounded-xl border-[3px] border-outline bg-card px-5 font-ui text-base font-semibold shadow-[4px_4px_0_var(--color-brand-crimson)] transition-[translate,box-shadow] duration-150 hover:translate-[4px] hover:shadow-none motion-reduce:transition-none"
+        >Every post, in the archive</a
+      >
+    </div>
+  </div>
+</Layout>

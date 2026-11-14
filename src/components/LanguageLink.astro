@@ -1,0 +1,41 @@
+---
+// Points at the other language version of a post. Its own lang, as it sits
+// beside text of the opposite language, and kept out of the search index.
+// Standalone, so underlined only on hover.
+interface Props {
+  href: string;
+  lang: string;
+  label: string;
+}
+const { href, lang, label } = Astro.props;
+---
+
+<p data-pagefind-ignore>
+  <a
+    href={href}
+    hreflang={lang}
+    lang={lang}
+    class="tap-area inline-flex min-h-6 items-center gap-1.5 font-ui font-semibold text-brand-crimson decoration-2 underline-offset-[3px] hover:underline"
+  >
+    <!-- Lucide 'languages' icon, ISC licence. -->
+    <svg
+      aria-hidden="true"
+      width="15"
+      height="15"
+      viewBox="0 0 24 24"
+      fill="none"
+      stroke="currentColor"
+      stroke-width="2"
+      stroke-linecap="round"
+      stroke-linejoin="round"
+    >
+      <path d="m5 8 6 6"></path>
+      <path d="m4 14 6-6 2-3"></path>
+      <path d="M2 5h12"></path>
+      <path d="M7 2h1"></path>
+      <path d="m22 22-5-10-5 10"></path>
+      <path d="M14 18h6"></path>
+    </svg>
+    {label}
+  </a>
+</p>

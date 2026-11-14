@@ -1,0 +1,29 @@
+---
+import ContentfulImage from "./ContentfulImage.astro";
+import { coverAltText } from "../lib/cover-image";
+import type { ListPost } from "../lib/types";
+
+// Runs to the card's edge, full bleed. The tint stands in until it loads.
+interface Props {
+  post: ListPost;
+  sizes: string;
+  priority?: boolean;
+  class: string;
+}
+const { post, sizes, priority = false, class: className } = Astro.props;
+---
+
+{
+  post.coverImage && (
+    <div class:list={["relative overflow-hidden bg-brand-dark/5", className]}>
+      <ContentfulImage
+        src={post.coverImage.url}
+        alt={coverAltText(post.coverImage)}
+        fill
+        sizes={sizes}
+        priority={priority}
+        class="object-cover"
+      />
+    </div>
+  )
+}

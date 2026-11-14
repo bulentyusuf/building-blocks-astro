@@ -1,0 +1,141 @@
+---
+// The enlarged view of a body image: one native <dialog> for the page. It
+// brings the focus trap, Escape and the inert page with it, so none of those
+// is hand-rolled. The enlarge button is added by the script, so with scripts
+// off there is no button that does nothing.
+---
+
+<!-- Full-viewport, so a click anywhere but the picture closes. The padding
+     must match worthEnlarging(). -->
+<dialog
+  id="lightbox"
+  class="fixed inset-0 m-0 size-full max-h-none max-w-none items-center justify-center bg-transparent p-4 open:flex md:p-8 backdrop:bg-black/80"
+>
+  <!-- A focus exception. Crimson is about 1.7:1 on the backdrop, white clears
+       12:1. -->
+  <button
+    type="button"
+    aria-label="Close enlarged image"
+    class="absolute top-4 right-4 flex h-11 w-11 items-center justify-center rounded-full border-2 border-white/40 bg-black/40 text-white hover:bg-brand-crimson focus:outline-hidden focus-visible:ring-2 focus-visible:ring-white focus-visible:ring-offset-2 focus-visible:ring-offset-black"
+  >
+    <svg
+      width="20"
+      height="20"
+      viewBox="0 0 24 24"
+      fill="none"
+      stroke="currentColor"
+      stroke-width="2.5"
+      stroke-linecap="round"
+      stroke-linejoin="round"
+      aria-hidden="true"
+    >
+      <path d="M18 6 6 18"></path>
+      <path d="m6 6 12 12"></path>
+    </svg>
+  </button>
+  <!-- Sized to the picture, so only the picture stops a click. A white
+       hairline, because a grey edge glares on black. The caption has its own
+       black backing, because the backdrop lets the page through. -->
+  <figure class="flex max-h-full flex-col">
+    <img
+      alt=""
+      sizes="100vw"
+      class="max-h-[75vh] w-full h-auto object-contain border-2 border-white/15"
+    />
+    <figcaption
+      id="lightbox-caption"
+      class="mt-1.5 self-center bg-black px-2 py-0.5 text-center text-sm italic text-white/80"
+    >
+    </figcaption>
+  </figure>
+</dialog>
+
+<script>
+  import { enlargedWidth, worthEnlarging } from "../lib/lightbox";
+
+  const dialog = document.querySelector<HTMLDialogElement>("#lightbox");
+  const images = [
+    ...document.querySelectorAll<HTMLImageElement>("img[data-lightbox]"),
+  ];
+
+  if (dialog && images.length > 0) {
+    const view = dialog.querySelector("img")!;
+    const frame = dialog.querySelector("figure")!;
+    const caption = dialog.querySelector("figcaption")!;
+    const closeButton = dialog.querySelector("button")!;
+    let opener: HTMLElement | null = null;
+
+    const size = (image: HTMLImageElement) => ({
+      width: Number(image.getAttribute("width")),
+      height: Number(image.getAttribute("height")),
+    });
+
+    const open = (image: HTMLImageElement) => {
+      const { width, height } = size(image);
+      const text =
+        image.closest("figure")?.querySelector("figcaption")?.textContent ?? "";
+      // Width and height give the aspect ratio only. sizes picks the file.
+      view.width = width;
+      view.height = height;
+      view.alt = image.alt;
+      view.srcset = image.srcset;
+      view.src = image.src;
+      frame.style.width = enlargedWidth(width, height);
+      caption.textContent = text;
+      caption.hidden = !text;
+      // Named by its caption, else by what the picture shows.
+      dialog.toggleAttribute("aria-labelledby", false);
+      dialog.toggleAttribute("aria-label", false);
+      if (text) dialog.setAttribute("aria-labelledby", caption.id);
+      else dialog.setAttribute("aria-label", image.alt || "Enlarged image");
+      opener = image.parentElement;
+      dialog.showModal();
+      // Set explicitly, because engines differ on where focus lands.
+      closeButton.focus();
+    };
+
+    // Every way out ends in the close event, so focus returns only there.
+    dialog.addEventListener("click", (event) => {
+      if (event.target !== view) dialog.close();
+    });
+    dialog.addEventListener("close", () => {
+      opener?.focus();
+      judge();
+    });
+
+    // The click is offered only where the enlarged view is really larger,
+    // re-judged on resize because the answer depends on the screen too.
+    function judge() {
+      for (const image of images) {
+        const offered = image.parentElement instanceof HTMLButtonElement;
+        const { width, height } = size(image);
+        const worth = worthEnlarging({
+          shownWidth: image.getBoundingClientRect().width,
+          assetWidth: width,
+          assetHeight: height,
+          viewportWidth: document.documentElement.clientWidth,
+          viewportHeight: window.innerHeight,
+          rootFontSize: parseFloat(
+            getComputedStyle(document.documentElement).fontSize,
+          ),
+        });
+        if (worth && !offered) {
+          // Bare on purpose: aria-label overrides the contents, and the image
+          // already carries the alt.
+          const button = document.createElement("button");
+          button.type = "button";
+          button.setAttribute("aria-label", "Enlarge image");
+          button.className = "mx-auto block w-full cursor-zoom-in";
+          button.style.maxWidth = image.style.maxWidth;
+          button.addEventListener("click", () => open(image));
+          image.before(button);
+          button.append(image);
+        } else if (!worth && offered && !dialog!.open) {
+          image.parentElement.replaceWith(image);
+        }
+      }
+    }
+    judge();
+    window.addEventListener("resize", judge);
+  }
+</script>

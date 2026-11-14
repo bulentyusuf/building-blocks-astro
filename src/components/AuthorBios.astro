@@ -1,0 +1,59 @@
+---
+import ContentfulImage from "./ContentfulImage.astro";
+import { renderRichText } from "../lib/rich-text";
+import type { Author } from "../lib/types";
+
+// One label and one panel, however many authors. Read, not pressed, so the
+// quiet edge. Out of the search index: identical on every post by an author.
+interface Props {
+  authors: Author[];
+}
+const authors = Astro.props.authors.filter((a) => a.bio);
+---
+
+{
+  authors.length > 0 && (
+    <div
+      data-pagefind-ignore
+      role="region"
+      aria-label={authors.length > 1 ? "About the authors" : "About the author"}
+    >
+      <p class="mb-4 font-mono text-sm font-medium text-brand-muted">
+        <span aria-hidden="true">// </span>written by
+      </p>
+      <div class="divide-y-2 divide-edge-quiet overflow-hidden rounded-container border-2 border-edge-quiet bg-card">
+        {authors.map((author) => (
+          <div class="flex flex-col gap-5 px-5 py-6 sm:flex-row sm:px-7">
+            {author.picture?.url && (
+              <ContentfulImage
+                src={author.picture.url}
+                alt=""
+                width={88}
+                height={88}
+                class="h-22 w-22 shrink-0 rounded-full border-[3px] border-outline object-cover"
+              />
+            )}
+            <div class="flex flex-col gap-2.5">
+              <p class="font-ui text-[1.625rem] leading-none font-[800]">
+                {author.name}
+              </p>
+              {/* Sized here, since the panel sits outside any prose column. */}
+              <div
+                class="text-[1.0625rem] leading-relaxed"
+                set:html={renderRichText({ content: author.bio!, headings: [] })}
+              />
+              {author.slug && (
+                <a
+                  href={`/authors/${author.slug}`}
+                  class="tap-area self-start font-ui font-semibold text-brand-crimson decoration-2 underline-offset-[3px] hover:underline"
+                >
+                  More from {author.name} →
+                </a>
+              )}
+            </div>
+          </div>
+        ))}
+      </div>
+    </div>
+  )
+}

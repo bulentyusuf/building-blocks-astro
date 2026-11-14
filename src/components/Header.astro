@@ -1,0 +1,128 @@
+---
+import SiteWordmark from "./SiteWordmark.astro";
+import StrandChips from "./StrandChips.astro";
+
+interface Props {
+  strand: { slug: string; onPost: boolean } | null;
+}
+const { strand } = Astro.props;
+
+// The phone menu only; on wider screens these live in the footer.
+const NAV_LINKS = [
+  { href: "/tags", label: "Tags" },
+  { href: "/archive", label: "Archive" },
+  { href: "/about", label: "About" },
+];
+
+// The square buttons in the header row: search and the phone menu.
+const squareButton =
+  "flex size-12 items-center justify-center rounded-xl border-[3px] border-outline bg-card text-brand-dark shadow-[3px_3px_0_var(--color-brand-crimson)] transition-[translate,box-shadow] duration-150 hover:translate-[3px] hover:shadow-none motion-reduce:transition-none md:shadow-[4px_4px_0_var(--color-brand-crimson)] md:hover:translate-[4px]";
+
+// Links are words in the UI face; mono is for // labels and code.
+const navLink =
+  "font-ui text-base font-semibold text-brand-dark hover:text-brand-crimson transition-colors duration-200";
+---
+
+<!-- One row: logo, strand chips, search. On phones the chips drop to their own
+     row, which scrolls sideways, and a menu joins search. -->
+<header class="relative z-50 w-full">
+  <div
+    class="max-w-frame mx-auto px-4 md:px-10 pt-6 pb-2 flex flex-wrap items-center gap-x-7 gap-y-4"
+  >
+    <SiteWordmark />
+    <StrandChips current={strand} />
+    <div class="ml-auto flex items-center gap-3">
+      <a href="/search" aria-label="Search" class={squareButton}>
+        <svg
+          aria-hidden="true"
+          viewBox="0 0 24 24"
+          fill="none"
+          stroke="currentColor"
+          stroke-width="3"
+          stroke-linecap="round"
+          class="h-5 w-5"
+        >
+          <circle cx="11" cy="11" r="7"></circle>
+          <path d="m20 20-4.3-4.3"></path>
+        </svg>
+      </a>
+      <nav aria-label="Primary" class="flex items-center md:hidden">
+        <details data-nav-menu class="group md:hidden">
+          <summary
+            aria-label="Menu"
+            class:list={["list-none cursor-pointer select-none", squareButton]}
+          >
+            <!-- Two icons, swapped by the [open] attribute. The X is what tells
+                 a reader how to close the menu. -->
+            <svg
+              aria-hidden="true"
+              viewBox="0 0 24 24"
+              fill="none"
+              stroke="currentColor"
+              stroke-width="2.5"
+              stroke-linecap="round"
+              class="h-5 w-5 group-open:hidden"
+            >
+              <path d="M4 7h16M4 12h16M4 17h16"></path>
+            </svg>
+            <svg
+              aria-hidden="true"
+              viewBox="0 0 24 24"
+              fill="none"
+              stroke="currentColor"
+              stroke-width="2.5"
+              stroke-linecap="round"
+              class="hidden h-5 w-5 group-open:block"
+            >
+              <path d="M5 5l14 14M5 19L19 5"></path>
+            </svg>
+          </summary>
+          <!-- Scrim under the open menu. It must ignore pointer events, or the
+               outside-tap handler sees a tap inside and will not close. -->
+          <div
+            aria-hidden="true"
+            class="pointer-events-none absolute inset-x-0 top-full z-40 hidden h-dvh bg-black/40 group-open:block"
+          >
+          </div>
+          <div
+            class="absolute right-5 top-full z-50 mt-2 min-w-[12rem] rounded-xl border-[3px] border-outline bg-brand-bg px-4 py-3 shadow-[4px_4px_0_var(--color-brand-crimson)]"
+          >
+            <ul>
+              {
+                NAV_LINKS.map(({ href, label }) => (
+                  <li>
+                    <a
+                      href={href}
+                      class:list={[navLink, "flex min-h-11 items-center"]}
+                    >
+                      {label}
+                    </a>
+                  </li>
+                ))
+              }
+            </ul>
+          </div>
+        </details>
+      </nav>
+    </div>
+  </div>
+</header>
+
+<script>
+  // A native <details> closes on neither Escape nor a tap outside it.
+  const menu = document.querySelector<HTMLDetailsElement>("[data-nav-menu]");
+  if (menu) {
+    // Focus returns to the summary, or it drops to <body>.
+    document.addEventListener("keydown", (event) => {
+      if (event.key !== "Escape" || !menu.open) return;
+      menu.open = false;
+      menu.querySelector("summary")?.focus();
+    });
+    // pointerdown, not click, so a drag that starts inside does not dismiss.
+    document.addEventListener("pointerdown", (event) => {
+      if (!menu.open) return;
+      if (event.target instanceof Node && menu.contains(event.target)) return;
+      menu.open = false;
+    });
+  }
+</script>

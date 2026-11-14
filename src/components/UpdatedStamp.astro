@@ -1,0 +1,19 @@
+---
+import { GERMAN_LOCALE } from "../lib/constants";
+import { formatLongDate } from "../lib/date";
+
+// "Updated 24 May 2026" as a double-ruled stamp: a border plus an offset
+// outline. Straight, not tilted.
+interface Props {
+  date: string;
+  german?: boolean;
+}
+const { date, german = false } = Astro.props;
+const label = german ? "Aktualisiert am " : "Updated ";
+---
+
+<span
+  lang={german ? GERMAN_LOCALE : undefined}
+  class="inline-flex min-h-7.5 items-center rounded-md border-2 border-outline px-2.5 font-ui text-xs font-bold tracking-[0.06em] uppercase tabular-nums outline-1 outline-offset-2 outline-outline"
+  >{label}<time datetime={date}>{formatLongDate(date, german)}</time></span
+>

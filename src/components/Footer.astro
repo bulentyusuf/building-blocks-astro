@@ -1,0 +1,92 @@
+---
+import NewWindowHint from "./NewWindowHint.astro";
+import PeekingMascots from "./PeekingMascots.astro";
+import SiteWordmark from "./SiteWordmark.astro";
+import {
+  SITE_AUTHOR,
+  SITE_FOOTER_BLURB,
+  SITE_REPO_URL,
+} from "../lib/constants";
+import type { Author } from "../lib/types";
+
+interface Props {
+  authors: Author[];
+}
+const { authors } = Astro.props;
+
+const footerLink =
+  "font-ui text-base font-semibold text-brand-dark hover:text-brand-crimson transition-colors duration-200";
+const tappable = "tap-area inline-flex min-h-11 items-center md:pointer-fine:min-h-8";
+// Column labels are <p>, not headings: one announced heading per section.
+const label = "font-mono text-sm font-medium text-brand-muted";
+---
+
+<footer>
+  <div class="max-w-frame mx-auto px-4 md:px-10">
+    <PeekingMascots authors={authors} />
+    <div class="border-t-[3px] border-outline pt-10 pb-12">
+      <div
+        class="grid grid-cols-2 gap-8 md:grid-cols-[2fr_1fr_1fr] md:gap-12"
+      >
+        <div class="col-span-2 md:col-span-1">
+          <SiteWordmark size="footer" />
+          <p class="mt-4 max-w-sm text-base">{SITE_FOOTER_BLURB}</p>
+          <!-- With the blurb, not the colophon: it is about the code, and the
+               one footer link that leaves the site, so marked. -->
+          <a
+            href={SITE_REPO_URL}
+            class:list={[footerLink, "mt-2", tappable]}
+            target="_blank"
+            rel="noopener noreferrer"
+            >Fork on GitHub<span aria-hidden="true">&nbsp;↗</span
+            ><NewWindowHint /></a
+          >
+        </div>
+
+        <nav aria-label="Browse">
+          <p class={label}><span aria-hidden="true">// </span>browse</p>
+          <ul class="mt-3">
+            {
+              [
+                ["/tags", "Tags"],
+                ["/archive", "Archive"],
+                ["/search", "Search"],
+              ].map(([href, text]) => (
+                <li>
+                  <a href={href} class:list={[footerLink, tappable]}>
+                    {text}
+                  </a>
+                </li>
+              ))
+            }
+          </ul>
+        </nav>
+
+        <nav aria-label="Colophon">
+          <p class={label}><span aria-hidden="true">// </span>colophon</p>
+          <ul class="mt-3">
+            {
+              [
+                ["/about", "About"],
+                ["/privacy", "Privacy"],
+                ["/feed.xml", "RSS feed"],
+              ].map(([href, text]) => (
+                <li>
+                  <a href={href} class:list={[footerLink, tappable]}>
+                    {text}
+                  </a>
+                </li>
+              ))
+            }
+          </ul>
+        </nav>
+      </div>
+
+      <p class="mt-10 font-ui text-sm text-brand-muted">
+        {
+          `© ${new Date().getFullYear()} ${SITE_AUTHOR} · Type set in Bricolage Grotesque, Literata and IBM Plex Mono`
+        }
+      </p>
+    </div>
+  </div>
+</footer>

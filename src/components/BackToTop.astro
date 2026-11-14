@@ -1,0 +1,50 @@
+---
+// Inert until the reader has scrolled, which keeps it out of the tab order
+// while hidden. A two-tone ring: a fixed control floats over grounds no single
+// colour clears.
+---
+
+<button
+  type="button"
+  data-back-to-top
+  aria-label="Back to top"
+  inert
+  class="fixed bottom-6 right-12 z-50 flex size-12 items-center justify-center rounded-xl border-[3px] border-outline bg-brand-bg text-brand-dark shadow-[4px_4px_0_var(--color-brand-crimson)] transition-[opacity,translate,box-shadow] duration-150 hover:translate-[4px] hover:shadow-none motion-reduce:transition-none focus:outline-hidden focus-visible:ring-2 focus-visible:ring-brand-dark focus-visible:ring-offset-2 focus-visible:ring-offset-brand-bg inert:pointer-events-none inert:opacity-0"
+>
+  <svg
+    width="18"
+    height="18"
+    viewBox="0 0 24 24"
+    fill="none"
+    stroke="currentColor"
+    stroke-width="3"
+    stroke-linecap="round"
+    stroke-linejoin="round"
+    aria-hidden="true"
+  >
+    <path d="M12 19V5"></path>
+    <path d="m5 12 7-7 7 7"></path>
+  </svg>
+</button>
+
+<script>
+  const button = document.querySelector<HTMLButtonElement>(
+    "[data-back-to-top]",
+  );
+  if (button) {
+    const update = () => {
+      button.inert = window.scrollY <= 600;
+    };
+    window.addEventListener("scroll", update, { passive: true });
+    update();
+
+    button.addEventListener("click", () => {
+      const reduced = window.matchMedia(
+        "(prefers-reduced-motion: reduce)",
+      ).matches;
+      window.scrollTo({ top: 0, behavior: reduced ? "auto" : "smooth" });
+      // The button hides itself at the top, so focus would drop to <body>.
+      document.getElementById("main")?.focus({ preventScroll: true });
+    });
+  }
+</script>

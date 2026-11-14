@@ -1,0 +1,30 @@
+---
+import PostPage from "../../../components/PostPage.astro";
+import {
+  getAllPosts,
+  getGermanPostAndMorePosts,
+  getGermanPostSlugs,
+} from "../../../lib/api";
+
+// Only translated posts have a German page. German has no fallback.
+export async function getStaticPaths() {
+  const slugs = await getGermanPostSlugs(false);
+  return slugs.map((slug) => ({ params: { slug } }));
+}
+
+const slug = Astro.params.slug!;
+const [{ post, morePosts }, allPosts] = await Promise.all([
+  getGermanPostAndMorePosts(slug, false),
+  getAllPosts(false),
+]);
+if (!post) throw new Error(`No published German post for "${slug}".`);
+---
+
+<PostPage
+  post={post}
+  morePosts={morePosts}
+  allPosts={allPosts}
+  slug={slug}
+  german
+  translated
+/>
