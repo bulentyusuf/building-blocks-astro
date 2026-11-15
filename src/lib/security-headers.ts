@@ -3,19 +3,25 @@
 
 export const CMS_ORIGIN = "https://app.contentful.com";
 
+// The analytics beacon's script and its report endpoint. Allowed only on a
+// build that is open to indexing.
+export const ANALYTICS_SCRIPT_ORIGIN = "https://static.cloudflareinsights.com";
+export const ANALYTICS_CONNECT_ORIGIN = "https://cloudflareinsights.com";
+
 // 'unsafe-inline' stays sitewide. Each relaxation is passed in per route,
 // never set on the base.
 export function contentSecurityPolicy({
   wasm = false,
   cmsFraming = false,
+  analytics = false,
 } = {}): string {
   return [
     "default-src 'self'",
-    `script-src 'self' 'unsafe-inline'${wasm ? " 'wasm-unsafe-eval'" : ""}`,
+    `script-src 'self' 'unsafe-inline'${wasm ? " 'wasm-unsafe-eval'" : ""}${analytics ? ` ${ANALYTICS_SCRIPT_ORIGIN}` : ""}`,
     "style-src 'self' 'unsafe-inline'",
     "img-src 'self' https://images.ctfassets.net data:",
     "font-src 'self'",
-    "connect-src 'self'",
+    `connect-src 'self'${analytics ? ` ${ANALYTICS_CONNECT_ORIGIN}` : ""}`,
     `frame-ancestors 'self'${cmsFraming ? ` ${CMS_ORIGIN}` : ""}`,
     "object-src 'none'",
     "base-uri 'self'",
@@ -49,8 +55,12 @@ function matches(pattern: string, pathname: string): boolean {
     : pathname === pattern;
 }
 
-export function contentSecurityPolicyFor(pathname: string): string {
+export function contentSecurityPolicyFor(
+  pathname: string,
+  analytics = false,
+): string {
   return contentSecurityPolicy({
+    analytics,
     wasm: WASM_PATHS.some((p) => matches(p, pathname)),
     cmsFraming: CMS_FRAMED_PATHS.some((p) => matches(p, pathname)),
   });
@@ -83,13 +93,14 @@ export function staticHeadersFile({
 }): string {
   const base = {
     ...SECURITY_HEADERS,
+    [CSP]: contentSecurityPolicy({ analytics: allowIndexing }),
     ...(allowIndexing ? {} : { "X-Robots-Tag": "noindex" }),
   };
   const relaxed = WASM_PATHS.map((pattern) =>
     [
       pattern,
       `  ! ${CSP}`,
-      `  ${CSP}: ${contentSecurityPolicy({ wasm: true })}`,
+      `  ${CSP}: ${contentSecurityPolicy({ wasm: true, analytics: allowIndexing })}`,
     ].join("\n"),
   );
   // The cards have no file extension for the host to read a type from.

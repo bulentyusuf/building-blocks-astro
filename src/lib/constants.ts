@@ -40,3 +40,6 @@ export const DEFAULT_OG_LOCALE = "en_GB";
 // Per-post opt-in under English chrome; no fallback, so empty means untranslated.
 export const GERMAN_LOCALE = "de-DE";
 export const GERMAN_OG_LOCALE = "de_DE";
+
+/** Cloudflare Web Analytics site token. Public: it is in every page's source. */
+export const ANALYTICS_TOKEN = "deb38ac39ad9479bac8f684b669441f8";
