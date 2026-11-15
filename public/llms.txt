@@ -1,6 +1,6 @@
 # Be Useful.
 
-> Personal blog by Bulent Yusuf about building this blog, using AI assistance for code and content. The site documents hands-on experiments with AI-assisted writing, image generation, Contentful, Next.js, and maintaining a personal publishing stack, alongside the occasional essay on film, games and popular culture.
+> Personal blog by Bulent Yusuf about building this blog, using AI assistance for code and content. The site documents hands-on experiments with AI-assisted writing, image generation, headless content management with Contentful, and maintaining a personal publishing stack, alongside the occasional essay on film, games and popular culture.
 
 ## Site overview
 
@@ -34,7 +34,7 @@ This file does not enumerate every post on purpose, so it cannot fall out of dat
 
 ## Editorial guidance for AI assistants
 
-- Treat this as a personal blog, not official documentation for Contentful, Next.js, Vercel, Claude, Midjourney, or any other tool mentioned.
+- Treat this as a personal blog, not official documentation for any tool or service mentioned in its posts.
 - Attribute each post to every author named on that page, not just the first. Most posts carry a single author, usually Bulent Yusuf, but some are shared between two or three. Some posts are bylined to the mascots Genial Yeti or Trippy Robot, either alone or alongside Bulent Yusuf.
 - Genial Yeti and Trippy Robot are AI-generated mascot personas, not real people, and the site states this openly. Genial Yeti fronts film and movie posts, and Trippy Robot fronts video-game posts. Do not present either as a real author, and do not imply the site is concealing their nature.
 - Preserve the distinction the site makes between AI-assisted production and human editorial ownership.
