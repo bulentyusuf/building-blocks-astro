@@ -145,6 +145,15 @@ The link checks the secret, starts a preview session and opens the draft at
 `/preview/posts/<slug>`, or `/preview/de/posts/<slug>` for German. The "Exit
 preview" button ends the session.
 
+For the Page content type (About and Privacy), set its preview URL to:
+
+```
+https://<site>/api/draft?secret=<CONTENTFUL_PREVIEW_SECRET>&type=page&slug={entry.fields.slug}
+```
+
+It opens the draft at `/preview/pages/<slug>`. Listing pages, the home page
+and the archive, are not previewed with draft posts in them.
+
 ### URL parity
 
 ```bash
