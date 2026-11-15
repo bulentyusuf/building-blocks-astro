@@ -53,6 +53,8 @@ can. No UI framework ships to the browser.
 - **Secrets are read from the environment, through `astro:env`.** Never commit
   one, never inline one at build. The preview token and secret are used only
   on the server.
+- **The analytics beacon and its two CSP hosts are tied to `ALLOW_INDEXING`.**
+  Public pages only, never `/preview/*`, never a closed build.
 - **Draft pages are gated in the middleware**, not in each page. A new draft
   route goes under `/preview/` and is covered without further work.
 - **Every JSON-LD block goes through `jsonLdHtml`**, which escapes the

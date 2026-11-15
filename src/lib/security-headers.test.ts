@@ -1,5 +1,8 @@
+import { readFileSync } from "node:fs";
 import { describe, it, expect } from "vitest";
 import {
+  ANALYTICS_CONNECT_ORIGIN,
+  ANALYTICS_SCRIPT_ORIGIN,
   CMS_ORIGIN,
   SECURITY_HEADERS,
   contentSecurityPolicy,
@@ -124,7 +127,7 @@ describe("the static headers file", () => {
   it("leaves each path with exactly the policy the route table gives it", () => {
     for (const path of ["/", "/posts/a", "/search", "/pagefind/x.js"]) {
       expect(resolveStatic(open, path).get(CSP), path).toBe(
-        contentSecurityPolicyFor(path),
+        contentSecurityPolicyFor(path, true),
       );
     }
   });
@@ -139,6 +142,56 @@ describe("the static headers file", () => {
     // beside the relaxed one, and the resolver must show it.
     const broken = open.replaceAll(`  ! ${CSP}\n`, "");
     expect(resolveStatic(broken, "/search").get(CSP)).toContain(", ");
+  });
+});
+
+describe("analytics", () => {
+  const hosts = (csp: string, directive: string) =>
+    (csp.split("; ").find((d) => d.startsWith(`${directive} `)) ?? "")
+      .split(/\s+/)
+      .filter((t) => t.startsWith("https://"));
+  const closed = staticHeadersFile({ allowIndexing: false });
+  const open = staticHeadersFile({ allowIndexing: true });
+  const pages = ["/", "/posts/a", "/search", "/pagefind/x.js"];
+
+  it("are allowed by the policy only when indexing is open, and only two hosts", () => {
+    for (const path of pages) {
+      const on = resolveStatic(open, path).get(CSP) ?? "";
+      expect(hosts(on, "script-src"), path).toEqual([ANALYTICS_SCRIPT_ORIGIN]);
+      expect(hosts(on, "connect-src"), path).toEqual([
+        ANALYTICS_CONNECT_ORIGIN,
+      ]);
+      const off = resolveStatic(closed, path).get(CSP) ?? "";
+      expect(off, path).not.toContain("cloudflareinsights");
+      expect(off, path).toBe(contentSecurityPolicyFor(path));
+    }
+  });
+
+  it("never reach a draft page or a Worker response", () => {
+    for (const path of ["/preview/posts/a", "/api/draft"]) {
+      expect(onDemandHeaders(path)[CSP], path).not.toContain(
+        "cloudflareinsights",
+      );
+    }
+  });
+
+  it("would be caught if the open policy dropped them", () => {
+    // Known-bad control: the open file without the hosts must fail the check.
+    const stripped = open.replaceAll(` ${ANALYTICS_SCRIPT_ORIGIN}`, "");
+    expect(
+      hosts(resolveStatic(stripped, "/").get(CSP) ?? "", "script-src"),
+    ).not.toEqual([ANALYTICS_SCRIPT_ORIGIN]);
+  });
+
+  it("render in the layout only on an open build and never on a draft", () => {
+    const layout = readFileSync("src/layouts/Layout.astro", "utf8");
+    const beacons = layout.match(/beacon\.min\.js/g) ?? [];
+    expect(beacons).toHaveLength(1);
+    expect(layout).toMatch(
+      /import\.meta\.env\.ALLOW_INDEXING && !preview && \(\s*<script[^>]*beacon\.min\.js/,
+    );
+    expect(layout).toContain("ANALYTICS_TOKEN");
+    expect(layout).not.toMatch(/deb38ac3/);
   });
 });
 
