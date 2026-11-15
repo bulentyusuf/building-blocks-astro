@@ -93,7 +93,7 @@ describe("headings", () => {
     expect(anchor).toContain("data-pagefind-ignore");
     expect(anchor).toContain("focus-visible:opacity-100");
     // The glyph is generated content: no "#" text node inside the heading.
-    expect(html.replace(/<[^>]*>/g, "")).toBe("Setup");
+    expect(html.replace(/[<>]/g, "")).toBe("Setup");
   });
 
   it("glues the last two words of a plain heading, and keeps a marked one marked", () => {
