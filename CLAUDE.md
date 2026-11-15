@@ -24,8 +24,9 @@ can. No UI framework ships to the browser.
 
 ## How the site is served
 
-- **Public pages are static files.** Only `/api/*` and `/preview/*` run in the
-  Worker. A new on-demand route needs a reason.
+- **Public pages are static files.** Only `/api/*`, `/preview/*` and the
+  adapter's `/_image`, which serves this site's own static images and nothing
+  else, run in the Worker. A new on-demand route needs a reason.
 - **Pages are rendered in the Workers runtime at build**, the adapter's
   default, so code shared with the draft pages cannot pass a build and then
   fail in the Worker. Do not switch prerendering to Node.
