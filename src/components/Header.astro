@@ -75,11 +75,12 @@ const navLink =
               <path d="M5 5l14 14M5 19L19 5"></path>
             </svg>
           </summary>
-          <!-- Scrim under the open menu. It must ignore pointer events, or the
-               outside-tap handler sees a tap inside and will not close. -->
+          <!-- Scrim under the open menu. It takes the tap itself, so closing
+               the menu never also presses whatever lies beneath. -->
           <div
+            data-nav-scrim
             aria-hidden="true"
-            class="pointer-events-none absolute inset-x-0 top-full z-40 hidden h-dvh bg-black/40 group-open:block"
+            class="absolute inset-x-0 top-full z-40 hidden h-dvh bg-black/40 group-open:block"
           ></div>
           <div class="absolute right-5 top-full z-50 mt-2 min-w-[12rem] rounded-xl border-[3px] border-outline bg-brand-bg px-4 py-3 shadow-[4px_4px_0_var(--color-brand-crimson)]">
             <ul>
@@ -115,6 +116,10 @@ const navLink =
     document.addEventListener("pointerdown", (event) => {
       if (!menu.open) return;
       if (event.target instanceof Node && menu.contains(event.target)) return;
+      menu.open = false;
+    });
+    // click, so the whole tap ends on the scrim before it goes.
+    menu.querySelector("[data-nav-scrim]")?.addEventListener("click", () => {
       menu.open = false;
     });
   }

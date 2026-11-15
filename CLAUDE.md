@@ -24,8 +24,9 @@ can. No UI framework ships to the browser.
 
 ## How the site is served
 
-- **Public pages are static files.** Only `/api/*` and `/preview/*` run in the
-  Worker. A new on-demand route needs a reason.
+- **Public pages are static files.** Only `/api/*`, `/preview/*` and the
+  adapter's `/_image`, which serves this site's own static images and nothing
+  else, run in the Worker. A new on-demand route needs a reason.
 - **Pages are rendered in the Workers runtime at build**, the adapter's
   default, so code shared with the draft pages cannot pass a build and then
   fail in the Worker. Do not switch prerendering to Node.
@@ -39,8 +40,11 @@ can. No UI framework ships to the browser.
 ## Security
 
 - **Response headers are defined once**, in `src/lib/security-headers.ts`.
-  Static files get them from the generated `_headers`, on-demand routes from
-  `src/middleware.ts`. `_headers` never applies to a Worker response.
+  Static files get them from the generated `_headers`, every Worker response
+  from `src/worker.ts`, the Worker's entry. `_headers` never applies to a
+  Worker response, and the middleware never sees a framework-made one.
+- **A Worker redirect never repeats the query string**, so a preview link
+  with a stray trailing slash cannot hand its secret back.
 - **`'unsafe-inline'` stays sitewide. Every other relaxation is per route**:
   `'wasm-unsafe-eval'` on `/search` and `/pagefind/*` only, Contentful framing
   on `/preview/*` only. Never on the base policy.

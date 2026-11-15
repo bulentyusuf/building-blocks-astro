@@ -1,6 +1,8 @@
 {
   "$schema": "node_modules/wrangler/config-schema.json",
   "name": "building-blocks-astro",
+  // Wraps the adapter's handler, so every response carries the headers.
+  "main": "./src/worker.ts",
   "compatibility_date": "2026-11-01",
   // node:crypto and node:async_hooks on the on-demand routes.
   "compatibility_flags": ["nodejs_compat"],
