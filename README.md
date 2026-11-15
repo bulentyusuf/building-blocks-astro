@@ -63,7 +63,7 @@ A recurring subject of the blog is the process of building and maintaining it. M
 
 **German translations**
 
-- Opt-in per post. A post gets a German page at `/de/posts/<slug>` once its title and excerpt have German text, and no page otherwise. There is no fallback to English
+- Opt-in per post. A post gets a German page at `/de/posts/<slug>` once its title, excerpt and body have German text, and no page otherwise. There is no fallback to English
 - The German page translates the article and keeps the site around it in English. Anything still English inside a German article is marked as English for screen readers
 - Each version links to the other under the byline, and both are paired with `hreflang` alternates in the page metadata. The sitemap lists both URLs
 - German pages stay out of site search and the RSS feed, which are English only
@@ -80,7 +80,7 @@ A recurring subject of the blog is the process of building and maintaining it. M
 - Content Security Policy, HSTS, Permissions-Policy and other security headers, defined once in `src/lib/security-headers.ts`. Static files get them from the generated `_headers`, and every Worker response gets them from the Worker's entry, `src/worker.ts`
 - A build is closed to search engines unless `ALLOW_INDEXING=true`
 - Formatting, type and test checks on every pull request, and Cloudflare builds each branch and reports on the pull request too
-- Dependabot keeps npm packages and pinned GitHub Actions current
+- CodeQL scanning, branch protection and Dependabot, configured in GitHub's settings rather than in the code
 - A URL parity script that compares the live site with a build, path by path
 
 ## 🛠 Working on it
