@@ -39,8 +39,11 @@ can. No UI framework ships to the browser.
 ## Security
 
 - **Response headers are defined once**, in `src/lib/security-headers.ts`.
-  Static files get them from the generated `_headers`, on-demand routes from
-  `src/middleware.ts`. `_headers` never applies to a Worker response.
+  Static files get them from the generated `_headers`, every Worker response
+  from `src/worker.ts`, the Worker's entry. `_headers` never applies to a
+  Worker response, and the middleware never sees a framework-made one.
+- **A Worker redirect never repeats the query string**, so a preview link
+  with a stray trailing slash cannot hand its secret back.
 - **`'unsafe-inline'` stays sitewide. Every other relaxation is per route**:
   `'wasm-unsafe-eval'` on `/search` and `/pagefind/*` only, Contentful framing
   on `/preview/*` only. Never on the base policy.

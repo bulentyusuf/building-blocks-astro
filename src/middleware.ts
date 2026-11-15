@@ -6,7 +6,6 @@ import {
   PREVIEW_PATH,
   isPreviewSession,
 } from "./lib/preview-session";
-import { onDemandHeaders } from "./lib/security-headers";
 
 // A build renders every page from one snapshot of the published content, so
 // its fetches are shared across pages. An on-demand request shares only with
@@ -26,19 +25,12 @@ export const onRequest = defineMiddleware((context, next) => {
         context.cookies.get(PREVIEW_COOKIE)?.value,
         getSecret("CONTENTFUL_PREVIEW_SECRET")?.trim(),
       );
-    const response = allowed
-      ? await next()
+    // The response headers are set in src/worker.ts, around every response.
+    return allowed
+      ? next()
       : new Response(
           "No preview session. Open the preview from Contentful again.",
           { status: 401 },
         );
-
-    // `_headers` does not apply to a response the Worker generates.
-    for (const [name, value] of Object.entries(
-      onDemandHeaders(context.url.pathname),
-    )) {
-      response.headers.set(name, value);
-    }
-    return response;
   });
 });
