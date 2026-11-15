@@ -2,9 +2,11 @@ import { writeFile } from "node:fs/promises";
 import { defineConfig, envField, fontProviders } from "astro/config";
 import type { AstroIntegration } from "astro";
 import cloudflare from "@astrojs/cloudflare";
+import { cacheCloudflare } from "@astrojs/cloudflare/cache";
 import tailwindcss from "@tailwindcss/vite";
 import { loadEnv } from "vite";
 import { ogCards } from "./integrations/og-cards";
+import { routeCache, routeCacheOn } from "./integrations/route-cache";
 import { searchIndex } from "./integrations/search-index";
 import { indexingAllowed, staticHeadersFile } from "./src/lib/security-headers";
 
@@ -14,6 +16,7 @@ const plexMono =
 
 const env = loadEnv(process.env.NODE_ENV ?? "production", process.cwd(), "");
 const allowIndexing = indexingAllowed(env.ALLOW_INDEXING);
+const routeCacheEnabled = routeCacheOn(env.ROUTE_CACHE);
 
 // Static files take their headers from `_headers`, which the middleware
 // cannot reach, so it is written from the same definitions at build.
@@ -35,7 +38,15 @@ export default defineConfig({
   build: { format: "file" },
   adapter: cloudflare({ imageService: "passthrough" }),
   session: false,
-  integrations: [staticHeaders, ogCards(), searchIndex()],
+  // Naming the provider also turns on Cloudflare's cache in front of the
+  // Worker, so it is named only when the switch is on.
+  ...(routeCacheEnabled && { cache: { provider: cacheCloudflare() } }),
+  integrations: [
+    routeCache(routeCacheEnabled),
+    staticHeaders,
+    ogCards(),
+    searchIndex(),
+  ],
   // Self-hosted from the installed font packages, so a build needs no font
   // service. Latin only. The variable faces carry their whole weight range and
   // the optical-size axis in one file per style.
@@ -125,12 +136,19 @@ export default defineConfig({
         access: "secret",
         optional: true,
       }),
+      // The purge endpoint only: a build does not need it.
+      CONTENTFUL_WEBHOOK_SECRET: envField.string({
+        context: "server",
+        access: "secret",
+        optional: true,
+      }),
     },
   },
   vite: {
     plugins: [tailwindcss()],
     define: {
       "import.meta.env.ALLOW_INDEXING": JSON.stringify(allowIndexing),
+      "import.meta.env.ROUTE_CACHE": JSON.stringify(routeCacheEnabled),
     },
   },
 });

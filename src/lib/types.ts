@@ -2,6 +2,12 @@ import type { Document } from "@contentful/rich-text-types";
 
 // Link fields are nullable because Contentful returns an unpublished target as null.
 
+// An entry's or an asset's id, which the route cache tags pages with. Optional,
+// so a query that feeds no cached page need not select it.
+export interface Identified {
+  sys?: { id: string };
+}
+
 export interface Asset {
   sys: {
     id: string;
@@ -38,7 +44,7 @@ export interface PromptBlock {
   sys: { id: string };
   prompt: string;
   label?: string; // optional header text; falls back to "Prompt" when absent
-  image?: { url: string; description?: string } | null; // linked asset; absent on text-only prompts
+  image?: (Identified & { url: string; description?: string }) | null; // linked asset; absent on text-only prompts
 }
 
 export interface Callout {
@@ -66,13 +72,11 @@ export interface Content {
   };
 }
 
-export interface Author {
+export interface Author extends Identified {
   name: string;
   slug?: string; // optional: legacy/draft authors may predate the field
   bio?: Content; // optional: not every author has a bio, and draft-safe
-  picture: {
-    url: string;
-  } | null;
+  picture: (Identified & { url: string }) | null;
 }
 
 export interface AuthorCollectionResponse {
@@ -83,7 +87,7 @@ export interface AuthorCollectionResponse {
   };
 }
 
-export interface CoverImage {
+export interface CoverImage extends Identified {
   url: string;
   // The alt text. Null when unset; consumers fall back to "".
   title?: string | null;
@@ -91,14 +95,14 @@ export interface CoverImage {
   fileName?: string | null;
 }
 
-export interface Category {
+export interface Category extends Identified {
   name: string;
   slug: string;
   description?: string;
 }
 
 // Up to three per post. The glossary is a text index, so no thumbnail.
-export interface Tag {
+export interface Tag extends Identified {
   name: string;
   slug: string;
   description?: string;
@@ -112,7 +116,7 @@ export interface TagCollectionResponse {
   };
 }
 
-export interface Post {
+export interface Post extends Identified {
   slug: string;
   title: string;
   coverImage?: CoverImage | null;

@@ -8,6 +8,7 @@ import {
   contentSecurityPolicy,
   contentSecurityPolicyFor,
   indexingAllowed,
+  cachedPageHeaders,
   onDemandHeaders,
   staticHeadersFile,
 } from "./security-headers";
@@ -102,6 +103,40 @@ describe("on-demand responses", () => {
   });
 });
 
+describe("a page held in the route cache", () => {
+  const pages = ["/", "/posts/a", "/de/posts/a", "/tags/x", "/archive"];
+
+  it("carries exactly what the static file it replaces carried", () => {
+    for (const allowIndexing of [false, true]) {
+      const file = staticHeadersFile({ allowIndexing });
+      for (const path of pages) {
+        const { "Cache-Control": _, ...headers } = cachedPageHeaders(
+          path,
+          allowIndexing,
+        );
+        expect(headers, `${path} ${allowIndexing}`).toEqual(
+          Object.fromEntries(resolveStatic(file, path)),
+        );
+      }
+    }
+  });
+
+  it("is closed to search engines unless the build is open", () => {
+    for (const path of pages) {
+      expect(cachedPageHeaders(path, false)["X-Robots-Tag"], path).toBe(
+        "noindex",
+      );
+      expect("X-Robots-Tag" in cachedPageHeaders(path, true), path).toBe(false);
+    }
+  });
+
+  it("has a browser ask again on every visit, as a static page does", () => {
+    expect(cachedPageHeaders("/", true)["Cache-Control"]).toBe(
+      "public, max-age=0, must-revalidate",
+    );
+  });
+});
+
 describe("the static headers file", () => {
   const closed = staticHeadersFile({ allowIndexing: false });
   const open = staticHeadersFile({ allowIndexing: true });
@@ -167,7 +202,7 @@ describe("analytics", () => {
     }
   });
 
-  it("never reach a draft page or a Worker response", () => {
+  it("never reach a draft page or an endpoint", () => {
     for (const path of ["/preview/posts/a", "/api/draft"]) {
       expect(onDemandHeaders(path)[CSP], path).not.toContain(
         "cloudflareinsights",

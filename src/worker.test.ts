@@ -143,3 +143,112 @@ describe("a draft address ending in /index.html", () => {
     }
   });
 });
+
+describe("with the route cache on", () => {
+  const EDGE = "Cloudflare-CDN-Cache-Control";
+  // What the cache provider puts on a page that asked to be held.
+  const page = (init: ResponseInit = {}) =>
+    new Response("rendered", {
+      ...init,
+      headers: {
+        [EDGE]: "public, max-age=604800",
+        "Cache-Tag": "post1,astro-path:/posts/a",
+        ...init.headers,
+      },
+    });
+  const on = (path: string, response: Response, allowIndexing = false) =>
+    respond(async () => response, new URL(`https://example.com${path}`), {
+      routeCache: true,
+      allowIndexing,
+    });
+
+  it("holds a public page, with a static file's headers", async () => {
+    const response = await on("/posts/a", page());
+    expect(response.headers.get(EDGE)).toBe("public, max-age=604800");
+    expect(response.headers.get("Cache-Tag")).toContain("post1");
+    expect(response.headers.get("Cache-Control")).toBe(
+      "public, max-age=0, must-revalidate",
+    );
+    expect(response.headers.get("Strict-Transport-Security")).toContain(
+      "max-age=",
+    );
+  });
+
+  it("keeps a held page out of search engines unless the build is open", async () => {
+    const closed = await on("/posts/a", page());
+    expect(closed.headers.get("X-Robots-Tag")).toBe("noindex");
+    expect(closed.headers.get("Content-Security-Policy")).not.toContain(
+      "cloudflareinsights",
+    );
+    const open = await on("/posts/a", page(), true);
+    expect(open.headers.has("X-Robots-Tag")).toBe(false);
+    expect(open.headers.get("Content-Security-Policy")).toContain(
+      "https://static.cloudflareinsights.com",
+    );
+  });
+
+  it("never holds a draft or an endpoint, whatever the route asked for", async () => {
+    for (const path of [
+      "/preview/posts/a",
+      "/preview/de/posts/a",
+      "/api/draft",
+      "/api/purge",
+    ]) {
+      const response = await on(path, page(), true);
+      expect(response.headers.get(EDGE), path).toBe("no-store");
+      expect(response.headers.has("Cache-Tag"), path).toBe(false);
+      expect(response.headers.get("Cache-Control"), path).toBe(
+        "private, no-store",
+      );
+      expect(response.headers.get("X-Robots-Tag"), path).toBe("noindex");
+      expect(
+        response.headers.get("Content-Security-Policy"),
+        path,
+      ).not.toContain("cloudflareinsights");
+    }
+  });
+
+  it("never holds a response that sets a cookie, failed, or did not ask", async () => {
+    for (const [label, made] of [
+      ["cookie", page({ headers: { "Set-Cookie": "preview_session=1.abc" } })],
+      ["404", page({ status: 404 })],
+      ["500", page({ status: 500 })],
+      ["no intent", new Response("rendered")],
+      [
+        "opted out",
+        new Response("rendered", { headers: { [EDGE]: "no-store" } }),
+      ],
+    ] as const) {
+      const response = await on("/posts/a", made, true);
+      expect(response.headers.get(EDGE), label).toBe("no-store");
+      expect(response.headers.has("Cache-Tag"), label).toBe(false);
+      expect(response.headers.get("Cache-Control"), label).toBe(
+        "private, no-store",
+      );
+      expect(response.headers.get("X-Robots-Tag"), label).toBe("noindex");
+    }
+  });
+
+  it("never holds a redirect", async () => {
+    const response = await on(
+      "/posts/a/",
+      page({ status: 301, headers: { Location: "/posts/a?x=1" } }),
+    );
+    expect(response.headers.get(EDGE)).toBe("no-store");
+    expect(response.headers.get("Location")).toBe("/posts/a");
+  });
+});
+
+describe("with the route cache off", () => {
+  it("holds nothing, even a page that asks, and adds no cache header", async () => {
+    // Known-bad control for the block above: the same response, switch off.
+    const asked = new Response("rendered", {
+      headers: { "Cloudflare-CDN-Cache-Control": "public, max-age=604800" },
+    });
+    const response = await send("/posts/a", asked);
+    expect(response.headers.get("Cache-Control")).toBe("private, no-store");
+    expect(response.headers.get("X-Robots-Tag")).toBe("noindex");
+    const plain = await send("/posts/a", new Response("rendered"));
+    expect(plain.headers.has("Cloudflare-CDN-Cache-Control")).toBe(false);
+  });
+});

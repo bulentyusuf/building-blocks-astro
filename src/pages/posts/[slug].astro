@@ -1,10 +1,13 @@
 ---
 import PostPage from "../../components/PostPage.astro";
 import {
+  getAllAuthors,
   getAllPosts,
   getGermanPostSlugs,
   getPostAndMorePosts,
 } from "../../lib/api";
+import { postPageTags } from "../../lib/cache-tags";
+import { hold, missing } from "../../lib/route-cache";
 
 export async function getStaticPaths() {
   const posts = await getAllPosts(false);
@@ -13,13 +16,17 @@ export async function getStaticPaths() {
 
 const slug = Astro.params.slug!;
 // All posts too: a tag pill shows only if its tag clears the sitewide
-// threshold.
-const [{ post, morePosts }, allPosts, germanSlugs] = await Promise.all([
-  getPostAndMorePosts(slug, false),
-  getAllPosts(false),
-  getGermanPostSlugs(false),
-]);
-if (!post) throw new Error(`No published post for "${slug}".`);
+// threshold. The authors are the footer's, read here for the cache tags.
+const [{ post, morePosts }, allPosts, germanSlugs, authors] = await Promise.all(
+  [
+    getPostAndMorePosts(slug, false),
+    getAllPosts(false),
+    getGermanPostSlugs(false),
+    getAllAuthors(false),
+  ],
+);
+if (!post) return missing(Astro, `No published post for "${slug}".`);
+hold(Astro.cache, postPageTags(post, morePosts, authors));
 ---
 
 <PostPage

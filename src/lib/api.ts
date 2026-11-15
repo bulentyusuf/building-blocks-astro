@@ -19,12 +19,14 @@ import type {
   AuthorCollectionResponse,
 } from "./types";
 
+// An entry's or an asset's id. The route cache tags a page with the id of
+// everything it shows, so a fragment a cached page reads selects it.
+const SYS_ID = `sys { id }`;
+
 // Every rich-text asset selection. `width` and `height` set the figure's aspect
 // ratio; without them every image lays out 3:2.
 const ASSET_BLOCK_FIELDS = `
-  sys {
-    id
-  }
+  ${SYS_ID}
   url
   title
   fileName
@@ -34,9 +36,11 @@ const ASSET_BLOCK_FIELDS = `
 `;
 
 const POST_GRAPHQL_FIELDS = `
+  ${SYS_ID}
   slug
   title
   coverImage {
+    ${SYS_ID}
     url
     title
     # fileName is not rendered. The cover component compares the title against
@@ -72,6 +76,7 @@ const POST_GRAPHQL_FIELDS = `
             prompt
             label
             image {
+              ${SYS_ID}
               url
               description
             }
@@ -88,20 +93,24 @@ const POST_GRAPHQL_FIELDS = `
     }
   }
   category {
+    ${SYS_ID}
     name
     slug
   }
   tagsCollection(limit: 3) {
     items {
+      ${SYS_ID}
       name
       slug
     }
   }
   authorsCollection(limit: ${MAX_AUTHORS}) {
     items {
+      ${SYS_ID}
       name
       slug
       picture {
+        ${SYS_ID}
         url
       }
       bio {
@@ -123,9 +132,11 @@ const POST_GRAPHQL_FIELDS = `
 // strings are GraphQL: a `//` comment inside one fails every post query, so
 // use `#`.
 const LIST_GRAPHQL_FIELDS = `
+  ${SYS_ID}
   slug
   title
   coverImage {
+    ${SYS_ID}
     url
     title
     # fileName is not rendered. The cover component compares the title against
@@ -138,20 +149,24 @@ const LIST_GRAPHQL_FIELDS = `
 
   excerpt
   category {
+    ${SYS_ID}
     name
     slug
   }
   tagsCollection(limit: 3) {
     items {
+      ${SYS_ID}
       name
       slug
     }
   }
   authorsCollection(limit: ${MAX_AUTHORS}) {
     items {
+      ${SYS_ID}
       name
       slug
       picture {
+        ${SYS_ID}
         url
       }
     }
@@ -637,6 +652,7 @@ export const getTagBySlug = memoise(
       `query GetTagBySlug($slug: String!, $preview: Boolean) {
       tagCollection(where: { slug: $slug }, preview: $preview, limit: 1) {
         items {
+          ${SYS_ID}
           name
           slug
           description
@@ -677,6 +693,7 @@ export const getCategoryBySlug = memoise(
       `query GetCategory($slug: String!, $preview: Boolean) {
       categoryCollection(where: { slug: $slug }, preview: $preview, limit: 1) {
         items {
+          ${SYS_ID}
           name
           slug
           description
@@ -697,6 +714,7 @@ export const getAuthorBySlug = memoise(
       `query GetAuthor($slug: String!, $preview: Boolean) {
       authorCollection(where: { slug: $slug }, preview: $preview, limit: 1) {
         items {
+          ${SYS_ID}
           name
           slug
           bio {
@@ -709,7 +727,7 @@ export const getAuthorBySlug = memoise(
               }
             }
           }
-          picture { url }
+          picture { ${SYS_ID} url }
         }
       }
     }`,
@@ -731,9 +749,10 @@ export const getAllAuthors = memoise(
       authorCollection(where: { slug_exists: true }, order: name_ASC, preview: $preview, limit: $limit, skip: $skip) {
         total
         items {
+          ${SYS_ID}
           name
           slug
-          picture { url }
+          picture { ${SYS_ID} url }
         }
       }
     }`,
