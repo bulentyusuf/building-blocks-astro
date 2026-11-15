@@ -143,7 +143,8 @@ const strand = currentStrand(
     </main>
     <Footer authors={authors} />
     {preview && (
-      // A two-tone ring: crimson would vanish on the button's own fill.
+      // A two-tone ring: crimson would vanish on the button's own fill. The
+      // label is the page ground, which flips with the crimson.
       <form
         method="post"
         action="/api/exit-preview"
@@ -151,7 +152,7 @@ const strand = currentStrand(
       >
         <button
           type="submit"
-          class="bg-brand-crimson text-white px-3 py-1.5 rounded-md text-sm font-bold shadow-md hover:opacity-90 transition-opacity duration-200 focus:outline-hidden focus-visible:ring-2 focus-visible:ring-white focus-visible:ring-offset-2 focus-visible:ring-offset-surface-dark"
+          class="bg-brand-crimson text-brand-bg px-3 py-1.5 rounded-md text-sm font-bold shadow-md hover:opacity-90 transition-opacity duration-200 focus:outline-hidden focus-visible:ring-2 focus-visible:ring-white focus-visible:ring-offset-2 focus-visible:ring-offset-surface-dark"
         >
           Exit preview
         </button>
