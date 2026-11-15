@@ -1,0 +1,16 @@
+---
+import ContentPage from "../../../components/ContentPage.astro";
+import { getPage } from "../../../lib/api";
+import { SITE_TITLE } from "../../../lib/constants";
+
+// The draft of a Page entry, rendered on request. The middleware has already
+// checked the preview session.
+export const prerender = false;
+
+const slug = Astro.params.slug!;
+if (!(await getPage(slug, true))) {
+  return new Response("Unknown slug", { status: 404 });
+}
+---
+
+<ContentPage slug={slug} description={`Draft of ${SITE_TITLE}`} preview />
