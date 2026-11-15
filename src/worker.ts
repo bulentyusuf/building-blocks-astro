@@ -1,4 +1,5 @@
 import { handle } from "@astrojs/cloudflare/handler";
+import { PREVIEW_PATH } from "./lib/preview-session";
 import { onDemandHeaders } from "./lib/security-headers";
 
 // The Worker's entry, named by `main` in wrangler.jsonc. It wraps the
@@ -13,7 +14,14 @@ export async function respond(
   render: () => Promise<Response>,
   url: URL,
 ): Promise<Response> {
-  const response = await render();
+  // The router matches /preview/posts/a/index.html to the draft page, then
+  // cannot read the slug back out of it and fails with a bare 500.
+  const broken =
+    url.pathname.startsWith(`${PREVIEW_PATH}/`) &&
+    url.pathname.endsWith("/index.html");
+  const response = broken
+    ? new Response("Not found", { status: 404 })
+    : await render();
 
   const headers = new Headers(response.headers);
   for (const [name, value] of Object.entries(onDemandHeaders(url.pathname))) {

@@ -115,3 +115,31 @@ describe("a redirect from the Worker", () => {
     expect(await made.text()).toContain("s3cret");
   });
 });
+
+describe("a draft address ending in /index.html", () => {
+  it("is not found, and never reaches the framework or Contentful", async () => {
+    for (const path of [
+      "/preview/posts/a/index.html",
+      "/preview/de/posts/a/index.html",
+    ]) {
+      const render = vi.fn(async () => new Response(null, { status: 500 }));
+      const response = await respond(
+        render,
+        new URL(`https://example.com${path}`),
+      );
+      expect(response.status, path).toBe(404);
+      expect(render, path).not.toHaveBeenCalled();
+      expect(response.headers.get("Cache-Control"), path).toBe(
+        "private, no-store",
+      );
+    }
+  });
+
+  it("leaves every other address to the framework", async () => {
+    for (const path of ["/preview/posts/a", "/nope/index.html", "/api/draft"]) {
+      const render = vi.fn(async () => new Response("rendered"));
+      await respond(render, new URL(`https://example.com${path}`));
+      expect(render, path).toHaveBeenCalledOnce();
+    }
+  });
+});
