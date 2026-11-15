@@ -31,8 +31,10 @@ can. No UI framework ships to the browser.
   fail in the Worker. Do not switch prerendering to Node.
 - **Check on-demand changes with `npm run preview`**, which serves the build
   in the Workers runtime, not only with the tests.
-- **Social cards are the one Node step**: `integrations/og-cards.ts` draws them
-  after the pages are built.
+- **Two Node steps follow the page build**, both in `integrations/`: the
+  social cards are drawn and the search index is written.
+- **The feed and the sitemap are written directly**, in `src/lib/feed.ts` and
+  `src/lib/sitemap.ts`. The sitemap lists only what has a page.
 
 ## Security
 
@@ -53,6 +55,32 @@ can. No UI framework ships to the browser.
   HTML-significant characters.
 - **Markup built as a string escapes everything it interpolates**, through
   `src/lib/html.ts`. Only the rich-text renderer builds strings.
+
+## Search
+
+- **Search runs on Pagefind's web components** with a house result template.
+  Keyboard and ARIA behaviour is upstream's and is not reimplemented.
+- **A search never leaves the browser.** The term is kept in `sessionStorage`,
+  never in the address, a request or `localStorage`. The privacy page promises
+  this.
+- **Pagefind's script and styles load on `/search` only**, and `/search` is
+  `noindex`.
+- **Only an English post's `h1` and `<article>` carry `data-pagefind-body`.**
+  German is not indexed. Anything inside that is not the post's own words
+  needs `data-pagefind-ignore`: `aria-hidden` and `opacity-0` do not hide
+  text from the index.
+- **Style the component hosts or the template's own classes**, never a `pf-*`
+  class, and never with `!important`.
+
+## Page shapes
+
+- **A route is wide or narrow, decided by its header.** Wide (`/archive`,
+  `/tags`, `/search`) renders through `WidePage.astro`. Narrow (`/about`,
+  `/privacy`) is one centred 49.25rem column, through `ContentPage.astro`.
+- **Home and the strand pages are neither**: cards under the header's chips,
+  an `sr-only` `h1`, no trail. Tag and author pages add a trail and a visible
+  `h1`, through `CollectionPage.astro`.
+- **No page draws a rule under its header or carries a standfirst.**
 
 ## Data and Contentful
 
@@ -109,7 +137,7 @@ can. No UI framework ships to the browser.
 - **One announced link per card, one description per figure.** A figure's
   `alt` is the asset's title, its caption the description.
 - **A scroll region's accessible name is its position** (`Table 2`, `Code
-  block 2`), or a code block's filename.
+block 2`), or a code block's filename.
 - **Standalone controls are 44px to tap on a touch screen.** A mouse keeps
   24px. Links inside a sentence are exempt.
 - **The skip link's target, `<main id="main">`, carries `tabindex="-1"`.**
@@ -120,8 +148,11 @@ can. No UI framework ships to the browser.
 
 ## Testing and workflow
 
-- **`npm run build` and `npm test` pass before every commit.** The build
-  type-checks first.
+- **`npm run build`, `npm test` and `npm run format:check` pass before every
+  commit.** The build type-checks first. `.github/workflows/checks.yml` runs
+  the format check, the type check and the tests on every pull request.
+- **Prettier formats, it does not lint.** Run `npm run format` before pushing.
+  After formatting a template, check the page: whitespace there is content.
 - **Tests check behaviour**, and a pattern-matching guard keeps a known-bad
   control beside it. Do not weaken a guard to make a change pass.
 - **`node scripts/url-parity.mjs <live> <candidate>`** reports any path that

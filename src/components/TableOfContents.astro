@@ -15,41 +15,39 @@ interface Props {
 const { headings, lang, numbered = false } = Astro.props;
 ---
 
-{
-  hasTableOfContents(headings) && (
-    <>
-      <details class="group overflow-hidden rounded-container border-[3px] border-outline bg-card xl:hidden">
-        <summary class="list-none flex min-h-12 items-center justify-between gap-3 cursor-pointer select-none px-5 py-3 font-mono text-sm font-medium text-brand-muted">
-          <span>
-            <span aria-hidden="true">// </span>on this page
-          </span>
-          <svg
-            class="h-4 w-4 text-brand-muted motion-safe:transition-transform motion-safe:duration-200 group-open:rotate-180"
-            xmlns="http://www.w3.org/2000/svg"
-            viewBox="0 0 20 20"
-            fill="currentColor"
-            aria-hidden="true"
-          >
-            <path
-              fill-rule="evenodd"
-              d="M5.22 8.22a.75.75 0 0 1 1.06 0L10 11.94l3.72-3.72a.75.75 0 1 1 1.06 1.06l-4.25 4.25a.75.75 0 0 1-1.06 0L5.22 9.28a.75.75 0 0 1 0-1.06Z"
-              clip-rule="evenodd"
-            />
-          </svg>
-        </summary>
-        <div class="px-5 pb-2">
-          <TocNav headings={headings} lang={lang} numbered={numbered} />
-        </div>
-      </details>
-      {/* The page's one strip of tape. Read, not pressed, so the quiet edge;
-          the phone disclosure keeps ink. */}
-      <div class="relative hidden rounded-container border-2 border-edge-quiet bg-card px-5.5 pt-5 pb-6 xl:block">
-        <Tape />
+{hasTableOfContents(headings) && (
+  <>
+    <details class="group overflow-hidden rounded-container border-[3px] border-outline bg-card xl:hidden">
+      <summary class="list-none flex min-h-12 items-center justify-between gap-3 cursor-pointer select-none px-5 py-3 font-mono text-sm font-medium text-brand-muted">
+        <span>
+          <span aria-hidden="true">// </span>on this page
+        </span>
+        <svg
+          class="h-4 w-4 text-brand-muted motion-safe:transition-transform motion-safe:duration-200 group-open:rotate-180"
+          xmlns="http://www.w3.org/2000/svg"
+          viewBox="0 0 20 20"
+          fill="currentColor"
+          aria-hidden="true"
+        >
+          <path
+            fill-rule="evenodd"
+            d="M5.22 8.22a.75.75 0 0 1 1.06 0L10 11.94l3.72-3.72a.75.75 0 1 1 1.06 1.06l-4.25 4.25a.75.75 0 0 1-1.06 0L5.22 9.28a.75.75 0 0 1 0-1.06Z"
+            clip-rule="evenodd"
+          />
+        </svg>
+      </summary>
+      <div class="px-5 pb-2">
         <TocNav headings={headings} lang={lang} numbered={numbered} />
       </div>
-    </>
-  )
-}
+    </details>
+    {/* The page's one strip of tape. Read, not pressed, so the quiet edge;
+          the phone disclosure keeps ink. */}
+    <div class="relative hidden rounded-container border-2 border-edge-quiet bg-card px-5.5 pt-5 pb-6 xl:block">
+      <Tape />
+      <TocNav headings={headings} lang={lang} numbered={numbered} />
+    </div>
+  </>
+)}
 
 <script>
   import { activationBandTop, pickActiveHeading } from "../lib/toc-active";
@@ -66,7 +64,8 @@ const { headings, lang, numbered = false } = Astro.props;
   if (headings.length > 0) {
     const mark = (slug: string) => {
       for (const link of links) {
-        if (slugOf(link) === slug) link.setAttribute("aria-current", "location");
+        if (slugOf(link) === slug)
+          link.setAttribute("aria-current", "location");
         else link.removeAttribute("aria-current");
       }
     };

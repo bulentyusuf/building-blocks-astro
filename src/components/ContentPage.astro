@@ -1,0 +1,57 @@
+---
+import Breadcrumb from "./Breadcrumb.astro";
+import UpdatedStamp from "./UpdatedStamp.astro";
+import Layout from "../layouts/Layout.astro";
+import { getPage } from "../lib/api";
+import { SITE_TITLE, SITE_URL } from "../lib/constants";
+import { renderRichText } from "../lib/rich-text";
+
+// A page written in Contentful: About and Privacy. A reading page, so the
+// header and the quiet panel share one centred column, 49.25rem, the 42rem
+// measure plus the panel's padding.
+interface Props {
+  slug: string;
+  description: string;
+}
+const { slug, description } = Astro.props;
+
+const page = await getPage(slug, false);
+if (!page) throw new Error(`No published page for "${slug}".`);
+
+const lastUpdated = page.sys.publishedAt ?? page.sys.firstPublishedAt;
+const title = `${page.title} | ${SITE_TITLE}`;
+---
+
+<Layout
+  title={title}
+  description={description}
+  canonical={`${SITE_URL}/${slug}`}
+  social={{ title }}
+>
+  <div class="max-w-frame mx-auto px-4 md:px-10 pt-8 pb-12">
+    <div class="mx-auto max-w-[49.25rem]">
+      <Breadcrumb
+        items={[{ label: "Home", href: "/" }, { label: page.title }]}
+      />
+      <h1 class="text-5xl leading-[0.98] font-[800] tracking-[-0.03em] md:text-6xl lg:text-7xl">
+        {page.title}
+      </h1>
+      {lastUpdated && (
+        <p class="mt-5">
+          <UpdatedStamp date={lastUpdated} />
+        </p>
+      )}
+      <article class="mt-9 pt-2 md:rounded-container md:border-2 md:border-edge-quiet md:bg-card md:px-14 md:py-12">
+        <div
+          class="prose text-pretty"
+          set:html={renderRichText({
+            content: page.body,
+            headings: [],
+            lightbox: false,
+            prioritizeFirstImage: true,
+          })}
+        />
+      </article>
+    </div>
+  </div>
+</Layout>

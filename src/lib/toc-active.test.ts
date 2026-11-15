@@ -153,7 +153,9 @@ describe("scroll offset lives in exactly one place", () => {
         ) {
           const text = fs.readFileSync(full, "utf8");
           // Match the utility, not the words in the comments explaining it.
-          if (/\bscroll-mt-\d/.test(text.replace(/\/\/.*|<!--[\s\S]*?-->/g, ""))) {
+          if (
+            /\bscroll-mt-\d/.test(text.replace(/\/\/.*|<!--[\s\S]*?-->/g, ""))
+          ) {
             offenders.push(path.relative(root, full));
           }
         }

@@ -65,9 +65,7 @@ const jsonLd = {
 const showUpdated = post.updatedDate && post.updatedDate !== post.date;
 const minutes = readingTimeMinutes(post.content.json);
 // In German with the post. Reading time never breaks.
-const readingTime = german
-  ? `${minutes} Min. Lesezeit`
-  : `${minutes} min read`;
+const readingTime = german ? `${minutes} Min. Lesezeit` : `${minutes} min read`;
 
 const promptId = coverPromptId(post);
 const headings = extractHeadings(post.content.json);
@@ -127,63 +125,61 @@ const indexed = german
     </p>
     <div class="mt-7">
       <Avatar authors={authors}>
-        <span class="tabular-nums text-brand-muted" lang={lang}
-          ><time datetime={post.date}>{formatLongDate(post.date, german)}</time
-          >{` · ${readingTime}`}</span
-        >
-        {showUpdated && <UpdatedStamp date={post.updatedDate!} german={german} />}
+        <span class="tabular-nums text-brand-muted" lang={lang}>
+          <time datetime={post.date}>{formatLongDate(post.date, german)}</time>
+          {` · ${readingTime}`}
+        </span>
+        {showUpdated && (
+          <UpdatedStamp date={post.updatedDate!} german={german} />
+        )}
         {languageLink && <LanguageLink {...languageLink} />}
       </Avatar>
     </div>
   </header>
   <script type="application/ld+json" set:html={jsonLdHtml(jsonLd)} />
   <article {...indexed} class="mt-8 md:mt-11">
-    {
-      post.coverImage && (
-        // A picture frame on the page: ink, never a shadow. 3:2 on phones,
-        // 16:9 from md.
-        <div class="relative overflow-hidden rounded-container border-[3px] border-outline">
-          <div class="relative overflow-hidden bg-brand-dark/5 aspect-3/2 md:aspect-video">
-            <ContentfulImage
-              src={post.coverImage.url}
-              alt={coverAltText(post.coverImage)}
-              fill
-              priority
-              sizes="(max-width: 768px) calc(100vw - 2rem), 1120px"
-              class="object-cover"
-            />
-          </div>
-          {promptId && (
-            // Over the image so the page keeps its position. A brush in the
-            // header's button style, so it covers little of any cover.
-            <a
-              href="#cover-prompt"
-              aria-label="Prompt for this cover image"
-              data-pagefind-ignore
-              class="absolute top-3 right-3 flex size-11 items-center justify-center rounded-xl border-[3px] border-outline bg-card text-brand-dark shadow-[3px_3px_0_var(--color-brand-crimson)] transition-[translate,box-shadow] duration-150 hover:translate-[3px] hover:shadow-none motion-reduce:transition-none md:top-4 md:right-4 md:shadow-[4px_4px_0_var(--color-brand-crimson)] md:hover:translate-[4px]"
-            >
-              <svg
-                width="20"
-                height="20"
-                viewBox="0 0 24 24"
-                fill="none"
-                stroke="currentColor"
-                stroke-width="2.5"
-                stroke-linecap="round"
-                stroke-linejoin="round"
-                aria-hidden="true"
-              >
-                <path d="m9.06 11.9 8.07-8.06a2.85 2.85 0 1 1 4.03 4.03l-8.06 8.08" />
-                <path d="M7.07 14.94c-1.66 0-3 1.35-3 3.02 0 1.33-2.5 1.52-2 2.02 1.08 1.1 2.49 2.02 4 2.02 2.2 0 4-1.8 4-4.04a3.01 3.01 0 0 0-3-3.02z" />
-              </svg>
-            </a>
-          )}
+    {post.coverImage && (
+      // A picture frame on the page: ink, never a shadow. 3:2 on phones,
+      // 16:9 from md.
+      <div class="relative overflow-hidden rounded-container border-[3px] border-outline">
+        <div class="relative overflow-hidden bg-brand-dark/5 aspect-3/2 md:aspect-video">
+          <ContentfulImage
+            src={post.coverImage.url}
+            alt={coverAltText(post.coverImage)}
+            fill
+            priority
+            sizes="(max-width: 768px) calc(100vw - 2rem), 1120px"
+            class="object-cover"
+          />
         </div>
-      )
-    }
-    <div
-      class="mt-8 flex flex-col gap-6 md:mt-16 md:gap-10 xl:grid xl:grid-cols-[minmax(15rem,1fr)_minmax(0,49.25rem)] xl:gap-12"
-    >
+        {promptId && (
+          // Over the image so the page keeps its position. A brush in the
+          // header's button style, so it covers little of any cover.
+          <a
+            href="#cover-prompt"
+            aria-label="Prompt for this cover image"
+            data-pagefind-ignore
+            class="absolute top-3 right-3 flex size-11 items-center justify-center rounded-xl border-[3px] border-outline bg-card text-brand-dark shadow-[3px_3px_0_var(--color-brand-crimson)] transition-[translate,box-shadow] duration-150 hover:translate-[3px] hover:shadow-none motion-reduce:transition-none md:top-4 md:right-4 md:shadow-[4px_4px_0_var(--color-brand-crimson)] md:hover:translate-[4px]"
+          >
+            <svg
+              width="20"
+              height="20"
+              viewBox="0 0 24 24"
+              fill="none"
+              stroke="currentColor"
+              stroke-width="2.5"
+              stroke-linecap="round"
+              stroke-linejoin="round"
+              aria-hidden="true"
+            >
+              <path d="m9.06 11.9 8.07-8.06a2.85 2.85 0 1 1 4.03 4.03l-8.06 8.08" />
+              <path d="M7.07 14.94c-1.66 0-3 1.35-3 3.02 0 1.33-2.5 1.52-2 2.02 1.08 1.1 2.49 2.02 4 2.02 2.2 0 4-1.8 4-4.04a3.01 3.01 0 0 0-3-3.02z" />
+            </svg>
+          </a>
+        )}
+      </div>
+    )}
+    <div class="mt-8 flex flex-col gap-6 md:mt-16 md:gap-10 xl:grid xl:grid-cols-[minmax(15rem,1fr)_minmax(0,49.25rem)] xl:gap-12">
       <!-- Stretches the row so the sticky wrapper has room, and keeps the
            column on xl when there is no contents list. -->
       <aside
@@ -194,7 +190,11 @@ const indexed = german
         ]}
       >
         <div class="xl:sticky xl:top-20">
-          <TableOfContents headings={headings} lang={lang} numbered={numbered} />
+          <TableOfContents
+            headings={headings}
+            lang={lang}
+            numbered={numbered}
+          />
         </div>
       </aside>
 
@@ -202,9 +202,7 @@ const indexed = german
         <!-- 49.25rem is the 42rem measure plus this padding and edge: the
              measure lives here, in rem, never on the prose in ch. Phones get
              no panel. -->
-        <div
-          class="pt-2 md:rounded-container md:border-2 md:border-edge-quiet md:bg-card md:px-14 md:py-12"
-        >
+        <div class="pt-2 md:rounded-container md:border-2 md:border-edge-quiet md:bg-card md:px-14 md:py-12">
           <!-- Heading sizes are em, tracking the prose base. -->
           <div
             lang={lang}
@@ -212,45 +210,41 @@ const indexed = german
             set:html={body}
           />
         </div>
-        {
-          tags.length > 0 && (
-            <nav
-              aria-label="Tags"
-              class="mt-10 flex flex-wrap items-center gap-x-3 gap-y-2"
-            >
-              <span class="font-mono text-sm font-medium text-brand-muted">
-                <span aria-hidden="true">// </span>tags
-              </span>
-              <ul class="flex flex-wrap items-center gap-2">
-                {tags.map((tag) => (
-                  <li>
-                    <TagPill tag={tag} />
-                  </li>
-                ))}
-              </ul>
-            </nav>
-          )
-        }
+        {tags.length > 0 && (
+          <nav
+            aria-label="Tags"
+            class="mt-10 flex flex-wrap items-center gap-x-3 gap-y-2"
+          >
+            <span class="font-mono text-sm font-medium text-brand-muted">
+              <span aria-hidden="true">// </span>tags
+            </span>
+            <ul class="flex flex-wrap items-center gap-2">
+              {tags.map((tag) => (
+                <li>
+                  <TagPill tag={tag} />
+                </li>
+              ))}
+            </ul>
+          </nav>
+        )}
         <div class="mt-10">
           <AuthorBios authors={authors} />
         </div>
       </div>
     </div>
   </article>
-  {
-    morePosts.length > 0 && (
-      <section class="mt-20">
-        <Label>more like this</Label>
-        <ul class="grid gap-8 md:grid-cols-2 md:gap-9">
-          {morePosts.map((card) => (
-            <li class="flex">
-              <PostCard post={card} showStrand across={2} />
-            </li>
-          ))}
-        </ul>
-      </section>
-    )
-  }
+  {morePosts.length > 0 && (
+    <section class="mt-20">
+      <Label>more like this</Label>
+      <ul class="grid gap-8 md:grid-cols-2 md:gap-9">
+        {morePosts.map((card) => (
+          <li class="flex">
+            <PostCard post={card} showStrand across={2} />
+          </li>
+        ))}
+      </ul>
+    </section>
+  )}
 </div>
 <Lightbox />
 

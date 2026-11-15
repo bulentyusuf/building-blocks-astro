@@ -5,6 +5,7 @@ import cloudflare from "@astrojs/cloudflare";
 import tailwindcss from "@tailwindcss/vite";
 import { loadEnv } from "vite";
 import { ogCards } from "./integrations/og-cards";
+import { searchIndex } from "./integrations/search-index";
 import { indexingAllowed, staticHeadersFile } from "./src/lib/security-headers";
 
 const variable = "./node_modules/@fontsource-variable";
@@ -34,7 +35,7 @@ export default defineConfig({
   build: { format: "file" },
   adapter: cloudflare({ imageService: "passthrough" }),
   session: false,
-  integrations: [staticHeaders, ogCards()],
+  integrations: [staticHeaders, ogCards(), searchIndex()],
   // Self-hosted from the installed font packages, so a build needs no font
   // service. Latin only. The variable faces carry their whole weight range and
   // the optical-size axis in one file per style.
@@ -64,12 +65,16 @@ export default defineConfig({
       options: {
         variants: [
           {
-            src: [`${variable}/literata/files/literata-latin-opsz-normal.woff2`],
+            src: [
+              `${variable}/literata/files/literata-latin-opsz-normal.woff2`,
+            ],
             weight: "200 900",
             style: "normal",
           },
           {
-            src: [`${variable}/literata/files/literata-latin-opsz-italic.woff2`],
+            src: [
+              `${variable}/literata/files/literata-latin-opsz-italic.woff2`,
+            ],
             weight: "200 900",
             style: "italic",
           },
@@ -85,8 +90,16 @@ export default defineConfig({
       optimizedFallbacks: false,
       options: {
         variants: [
-          { src: [`${plexMono}-400-normal.woff2`], weight: 400, style: "normal" },
-          { src: [`${plexMono}-500-normal.woff2`], weight: 500, style: "normal" },
+          {
+            src: [`${plexMono}-400-normal.woff2`],
+            weight: 400,
+            style: "normal",
+          },
+          {
+            src: [`${plexMono}-500-normal.woff2`],
+            weight: 500,
+            style: "normal",
+          },
         ],
       },
     },

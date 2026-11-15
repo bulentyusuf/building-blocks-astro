@@ -1,0 +1,93 @@
+---
+import CollectionPage from "../../components/CollectionPage.astro";
+import ContentfulImage from "../../components/ContentfulImage.astro";
+import Layout from "../../layouts/Layout.astro";
+import {
+  getAllAuthors,
+  getAllPosts,
+  getAuthorBySlug,
+  getGermanPostSlugs,
+} from "../../lib/api";
+import { postsByAuthor } from "../../lib/authors";
+import { SITE_TITLE, SITE_URL } from "../../lib/constants";
+import { renderRichText } from "../../lib/rich-text";
+import { visibleTagSlugs } from "../../lib/tags";
+import { widont } from "../../lib/typography";
+
+export async function getStaticPaths() {
+  const authors = await getAllAuthors(false);
+  return authors
+    .filter((author) => author.slug)
+    .map((author) => ({ params: { slug: author.slug } }));
+}
+
+const slug = Astro.params.slug!;
+// Filtered in memory: Contentful cannot filter on a list of links.
+const [author, allPosts, germanSlugs] = await Promise.all([
+  getAuthorBySlug(slug, false),
+  getAllPosts(false),
+  getGermanPostSlugs(false),
+]);
+if (!author) throw new Error(`No published author for "${slug}".`);
+
+const posts = postsByAuthor(allPosts, slug);
+const closing =
+  posts.length === 0
+    ? "No posts by this author yet."
+    : posts.length === 1
+      ? `That’s the only post by ${author.name}.`
+      : `That’s all ${posts.length} posts by ${author.name}.`;
+
+const jsonLd = {
+  "@context": "https://schema.org",
+  "@type": "ProfilePage",
+  mainEntity: {
+    "@type": "Person",
+    name: author.name,
+    url: `${SITE_URL}/authors/${slug}`,
+    image: author.picture?.url,
+  },
+};
+---
+
+<Layout
+  title={`${author.name} | ${SITE_TITLE}`}
+  description={`Posts by ${author.name} on ${SITE_TITLE}`}
+  canonical={`${SITE_URL}/authors/${slug}`}
+  social={{
+    title: `${author.name} | ${SITE_TITLE}`,
+    shortTitle: author.name,
+    image: author.picture?.url,
+  }}
+>
+  <!-- No authors index to point at, so the trail is two steps. -->
+  <CollectionPage
+    crumbs={[{ label: "Home", href: "/" }, { label: author.name }]}
+    posts={posts}
+    visibleTags={visibleTagSlugs(allPosts)}
+    germanSlugs={new Set(germanSlugs)}
+    closing={closing}
+    jsonLd={jsonLd}
+  >
+    <div class="flex items-center gap-5 md:gap-7">
+      {author.picture?.url && (
+        <ContentfulImage
+          src={author.picture.url}
+          alt=""
+          width={112}
+          height={112}
+          class="h-20 w-20 shrink-0 rounded-full border-[3px] border-outline object-cover md:h-28 md:w-28"
+        />
+      )}
+      <h1 class="text-[length:min(3rem,13.5vw)] leading-[0.98] font-[800] tracking-[-0.03em] text-pretty md:text-6xl lg:text-7xl">
+        {widont(author.name)}
+      </h1>
+    </div>
+    {author.bio && (
+      <div
+        class="mt-6 max-w-2xl text-lg leading-relaxed text-pretty text-brand-muted"
+        set:html={renderRichText({ content: author.bio, headings: [] })}
+      />
+    )}
+  </CollectionPage>
+</Layout>

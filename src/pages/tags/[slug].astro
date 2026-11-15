@@ -1,0 +1,52 @@
+---
+import CollectionPage from "../../components/CollectionPage.astro";
+import Layout from "../../layouts/Layout.astro";
+import { getAllPosts, getGermanPostSlugs, getTagBySlug } from "../../lib/api";
+import { SITE_TITLE, SITE_URL } from "../../lib/constants";
+import { postsWithTag, visibleTagSlugs } from "../../lib/tags";
+import { widont } from "../../lib/typography";
+
+// Only tags the index shows: a tag gets a page with its second post.
+export async function getStaticPaths() {
+  const posts = await getAllPosts(false);
+  return [...visibleTagSlugs(posts)].map((slug) => ({ params: { slug } }));
+}
+
+const slug = Astro.params.slug!;
+const [tag, allPosts, germanSlugs] = await Promise.all([
+  getTagBySlug(slug, false),
+  getAllPosts(false),
+  getGermanPostSlugs(false),
+]);
+if (!tag) throw new Error(`No published tag for "${slug}".`);
+
+const posts = postsWithTag(allPosts, slug);
+// Each card's own tag pill would repeat the page; the others still show.
+const otherTags = new Set(
+  [...visibleTagSlugs(allPosts)].filter((s) => s !== slug),
+);
+---
+
+<Layout
+  title={`${tag.name} | ${SITE_TITLE}`}
+  description={tag.description || `Posts tagged ${tag.name} on ${SITE_TITLE}`}
+  canonical={`${SITE_URL}/tags/${slug}`}
+  social={{ title: `${tag.name} | ${SITE_TITLE}`, shortTitle: tag.name }}
+>
+  <CollectionPage
+    crumbs={[
+      { label: "Home", href: "/" },
+      { label: "Tags", href: "/tags" },
+      { label: tag.name },
+    ]}
+    posts={posts}
+    visibleTags={otherTags}
+    germanSlugs={new Set(germanSlugs)}
+    closing={`That’s all ${posts.length} posts tagged ${tag.name}.`}
+  >
+    <h1 class="text-[length:min(3rem,13.5vw)] leading-[0.98] font-[800] tracking-[-0.03em] text-pretty md:text-6xl lg:text-7xl">
+      <span aria-hidden="true">#</span>
+      {widont(tag.name)}
+    </h1>
+  </CollectionPage>
+</Layout>

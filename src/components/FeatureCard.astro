@@ -36,41 +36,36 @@ const strand = strandFor(post.category) ?? STRANDS[0];
     sizes="(width < 48rem) calc(100vw - 2.375rem), (width < 75rem) calc(100vw - 5.375rem), (width < 80rem) 1114px, 557px"
     class="aspect-3/2 xl:col-span-6"
   />
-  <div
-    class="flex flex-col gap-4 px-4 pb-5 md:px-6 md:pb-7 xl:col-span-6 xl:self-center xl:px-8 xl:py-4"
-  >
+  <div class="flex flex-col gap-4 px-4 pb-5 md:px-6 md:pb-7 xl:col-span-6 xl:self-center xl:px-8 xl:py-4">
     <CardMeta
       post={post}
       class="text-base xl:flex-nowrap"
       showStrand={showStrand}
       bylineClass="xl:min-w-0 xl:truncate"
     />
-    <h3
-      class="text-3xl xl:line-clamp-3 font-[800] leading-none tracking-[-0.02em] text-pretty md:text-4xl lg:text-[2.875rem]"
-    >
+    <h3 class="text-3xl xl:line-clamp-3 font-[800] leading-none tracking-[-0.02em] text-pretty md:text-4xl lg:text-[2.875rem]">
       <a
         href={`/posts/${post.slug}`}
         class="after:absolute after:inset-0 after:content-[''] hover:text-brand-crimson transition-colors duration-200"
-        >{widont(post.title)}</a
       >
+        {widont(post.title)}
+      </a>
     </h3>
     <p class="text-lg leading-relaxed text-pretty xl:line-clamp-2">
       {widont(post.excerpt)}
     </p>
     <!-- Phones drop the pills: two wrapped lines, and the post carries them. -->
-    {
-      tags.length > 0 && (
-        <ul
-          aria-label="Tags"
-          class="flex flex-wrap gap-2 pointer-coarse:gap-y-3 relative z-10 max-md:hidden"
-        >
-          {tags.map((tag) => (
-            <li>
-              <TagPill tag={tag} size="compact" />
-            </li>
-          ))}
-        </ul>
-      )
-    }
+    {tags.length > 0 && (
+      <ul
+        aria-label="Tags"
+        class="flex flex-wrap gap-2 pointer-coarse:gap-y-3 relative z-10 max-md:hidden"
+      >
+        {tags.map((tag) => (
+          <li>
+            <TagPill tag={tag} size="compact" />
+          </li>
+        ))}
+      </ul>
+    )}
   </div>
 </article>

@@ -71,9 +71,7 @@ describe("headings", () => {
   );
 
   it("gives each h2 the id the contents list links to, in order", () => {
-    expect(ids(render(body))).toEqual(
-      extractHeadings(body).map((h) => h.slug),
-    );
+    expect(ids(render(body))).toEqual(extractHeadings(body).map((h) => h.slug));
     expect(ids(render(body))).toEqual(["setup", "setup-1", "fuer-anfaenger"]);
   });
 
@@ -109,10 +107,16 @@ describe("headings", () => {
 
   it("stamps each non-empty h2 in order when numbered, and only then", () => {
     const stamps = (html: string) =>
-      [...html.matchAll(/<span aria-hidden="true" data-pagefind-ignore[^>]*>(\d\d)<\/span>/g)].map(
-        (m) => m[1],
-      );
-    expect(stamps(render(body, { numbered: true }))).toEqual(["01", "02", "03"]);
+      [
+        ...html.matchAll(
+          /<span aria-hidden="true" data-pagefind-ignore[^>]*>(\d\d)<\/span>/g,
+        ),
+      ].map((m) => m[1]);
+    expect(stamps(render(body, { numbered: true }))).toEqual([
+      "01",
+      "02",
+      "03",
+    ]);
     expect(stamps(render(body))).toEqual([]);
   });
 });
@@ -165,7 +169,11 @@ describe("hyperlinks", () => {
   });
 
   it("degrades an unsafe URI to its text", () => {
-    for (const uri of ["javascript:alert(1)", "//evil.example", "/\t/evil.example"]) {
+    for (const uri of [
+      "javascript:alert(1)",
+      "//evil.example",
+      "/\t/evil.example",
+    ]) {
       expect(a(uri), uri).toBe("<p>text tail</p>");
     }
   });
@@ -180,7 +188,13 @@ describe("hyperlinks", () => {
 describe("inline embeds", () => {
   it("render nothing where a leftover embed sits", () => {
     const html = render(
-      doc(p(text("Before "), embed("embedded-entry-inline", "x1"), text(" after"))),
+      doc(
+        p(
+          text("Before "),
+          embed("embedded-entry-inline", "x1"),
+          text(" after"),
+        ),
+      ),
     );
     expect(html).toBe("<p>Before  after</p>");
   });
@@ -207,9 +221,9 @@ describe("embedded images", () => {
 
   it("marks the figure English unless a German page translated it", () => {
     expect(render(body, { assets: [asset] })).toContain('<figure lang="en-GB"');
-    expect(
-      render(body, { assets: [{ ...asset, lang: "de-DE" }] }),
-    ).toContain('<figure lang="de-DE"');
+    expect(render(body, { assets: [{ ...asset, lang: "de-DE" }] })).toContain(
+      '<figure lang="de-DE"',
+    );
   });
 
   it("falls back to 3:2 when the asset carries no size", () => {
@@ -232,7 +246,10 @@ describe("embedded images", () => {
       embed("embedded-asset-block", "a1"),
     );
     expect(render(two, { assets: [asset] })).not.toContain("fetchpriority");
-    const leading = render(two, { assets: [asset], prioritizeFirstImage: true });
+    const leading = render(two, {
+      assets: [asset],
+      prioritizeFirstImage: true,
+    });
     expect(leading.match(/fetchpriority="high"/g)).toHaveLength(1);
     expect(leading.match(/loading="lazy"/g)).toHaveLength(1);
   });
@@ -260,7 +277,12 @@ describe("embedded images", () => {
 
 describe("code blocks", () => {
   const entries: EntryLink["block"] = [
-    { __typename: "CodeBlock", sys: { id: "c1" }, language: "bash", code: "ls <dir>" },
+    {
+      __typename: "CodeBlock",
+      sys: { id: "c1" },
+      language: "bash",
+      code: "ls <dir>",
+    },
     {
       __typename: "CodeBlock",
       sys: { id: "c2" },
@@ -290,7 +312,9 @@ describe("code blocks", () => {
   it("uses the highlighted markup when given, and escaped code when not", () => {
     const html = render(body, {
       entries,
-      highlighted: new Map([["c2", '<pre class="shiki"><code>HL</code></pre>']]),
+      highlighted: new Map([
+        ["c2", '<pre class="shiki"><code>HL</code></pre>'],
+      ]),
     });
     expect(html).toContain("<code>ls &lt;dir&gt;</code>");
     expect(html).toContain('<pre class="shiki"><code>HL</code></pre>');
@@ -298,7 +322,11 @@ describe("code blocks", () => {
 
   it("carries a copy button that stays hidden until the page reveals it", () => {
     const html = render(body, { entries });
-    expect(html.match(/<button type="button" data-copy="code"[^>]*class="[^"]*\binvisible\b/g)).toHaveLength(2);
+    expect(
+      html.match(
+        /<button type="button" data-copy="code"[^>]*class="[^"]*\binvisible\b/g,
+      ),
+    ).toHaveLength(2);
     expect(html.match(/data-copy-source/g)).toHaveLength(2);
   });
 });
@@ -309,7 +337,9 @@ describe("callouts", () => {
       __typename: "Callout",
       sys: { id: "k1" },
       label: "Editor's <note>",
-      body: { json: doc(p(text("Boxed words go here")), p(link("/x", "More"))) },
+      body: {
+        json: doc(p(text("Boxed words go here")), p(link("/x", "More"))),
+      },
       ...extra,
     },
   ];
@@ -324,9 +354,9 @@ describe("callouts", () => {
   });
 
   it("keeps one marked Hide from search out of the index, and only that one", () => {
-    expect(render(body, { entries: callout({ hideFromSearch: true }) })).toContain(
-      'data-pagefind-ignore=""',
-    );
+    expect(
+      render(body, { entries: callout({ hideFromSearch: true }) }),
+    ).toContain('data-pagefind-ignore=""');
     expect(render(body, { entries: callout() })).not.toContain(
       "data-pagefind-ignore",
     );
@@ -341,7 +371,12 @@ describe("callouts", () => {
 
 describe("prompt blocks", () => {
   const prompt = (extra: object = {}): EntryLink["block"] => [
-    { __typename: "PromptBlock", sys: { id: "p1" }, prompt: "Draw <this>", ...extra },
+    {
+      __typename: "PromptBlock",
+      sys: { id: "p1" },
+      prompt: "Draw <this>",
+      ...extra,
+    },
   ];
   const body = doc(embed("embedded-entry-block", "p1"));
 
@@ -357,9 +392,9 @@ describe("prompt blocks", () => {
     expect(render(body, { entries: prompt(), coverPromptId: "p1" })).toContain(
       'id="cover-prompt"',
     );
-    expect(render(body, { entries: prompt(), coverPromptId: "other" })).not.toContain(
-      "cover-prompt",
-    );
+    expect(
+      render(body, { entries: prompt(), coverPromptId: "other" }),
+    ).not.toContain("cover-prompt");
   });
 
   it("shows a decorative thumbnail only when it has an image", () => {
@@ -390,7 +425,12 @@ describe("tables", () => {
   });
 
   it("does not flag a column of placeholders alone", () => {
-    const dashes = block("table", row(head("A")), row(cell("—")), row(cell("")));
+    const dashes = block(
+      "table",
+      row(head("A")),
+      row(cell("—")),
+      row(cell("")),
+    );
     expect(numericColumns(dashes as never)).toEqual([false]);
   });
 

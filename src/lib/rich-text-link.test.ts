@@ -17,15 +17,17 @@ describe("resolveHyperlink", () => {
   });
 
   it("treats the site's own origin and subdomains as internal", () => {
-    expect(resolveHyperlink("https://beuseful.net/about")?.external).toBe(false);
+    expect(resolveHyperlink("https://beuseful.net/about")?.external).toBe(
+      false,
+    );
     expect(resolveHyperlink("https://www.beuseful.net/")?.external).toBe(false);
   });
 
   it("marks another origin external, lookalikes included", () => {
     expect(resolveHyperlink("https://example.com/x")?.external).toBe(true);
-    expect(resolveHyperlink("https://beuseful.net.evil.example/")?.external).toBe(
-      true,
-    );
+    expect(
+      resolveHyperlink("https://beuseful.net.evil.example/")?.external,
+    ).toBe(true);
     expect(resolveHyperlink("https://notbeuseful.net/")?.external).toBe(true);
   });
 

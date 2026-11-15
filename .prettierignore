@@ -1,0 +1,7 @@
+dist
+.astro
+.wrangler
+package-lock.json
+worker-configuration.d.ts
+# Served as they are.
+public
