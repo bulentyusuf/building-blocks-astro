@@ -27,14 +27,17 @@ afterEach(() => {
 });
 
 describe("getGermanPostSlugs", () => {
-  it("keeps only posts with a German title and excerpt", async () => {
+  it("keeps only posts with a German title, excerpt and body", async () => {
+    const body = { json: { nodeType: "document", content: [] } };
     vi.stubGlobal(
       "fetch",
       vi.fn().mockResolvedValue(
         page([
-          { slug: "full", title: "Titel", excerpt: "Auszug" },
-          { slug: "title-only", title: "Titel", excerpt: null },
-          { slug: "untranslated", title: null, excerpt: null },
+          { slug: "full", title: "Titel", excerpt: "Auszug", content: body },
+          // Known-bad: without the body check this slug would be listed.
+          { slug: "no-body", title: "Titel", excerpt: "Auszug", content: null },
+          { slug: "title-only", title: "Titel", excerpt: null, content: body },
+          { slug: "untranslated", title: null, excerpt: null, content: null },
         ]),
       ),
     );
