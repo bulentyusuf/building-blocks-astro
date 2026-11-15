@@ -1,17 +1,18 @@
 #!/usr/bin/env node
-// Checks that two deployments answer the same paths the same way.
+// Checks that the live site and a local build answer the same paths the same
+// way. Run it after a change that could move a URL, or before a switchover.
 //
-//   node scripts/url-parity.mjs <reference> <candidate> [redirects-config]
+//   node scripts/url-parity.mjs <reference> <candidate>
 //
-// Paths come from the reference's /sitemap.xml, plus every redirect source in
-// the optional config, a module whose `redirects()` returns `{ source }`
-// entries. Each path is requested from both origins without following
-// redirects. Any difference in status or redirect target is printed, and the
-// exit code is 1.
+// Paths come from the reference's /sitemap.xml, plus every source in this
+// repo's public/_redirects. Each path is requested from both origins without
+// following redirects. Any difference in status or redirect target is
+// printed, and the exit code is 1.
 
-import { createRequire } from "node:module";
-import path from "node:path";
+import { readFileSync } from "node:fs";
 import { pathToFileURL } from "node:url";
+
+const REDIRECTS_FILE = new URL("../public/_redirects", import.meta.url);
 
 const CONCURRENCY = 8;
 
@@ -38,18 +39,29 @@ export async function sitemapPaths(origin, fetcher = fetch) {
   });
 }
 
+/** The source of every rule in a `_redirects` file, comments skipped. */
+export function redirectSources(text) {
+  return text
+    .split("\n")
+    .map((line) => line.trim())
+    .filter((line) => line && !line.startsWith("#"))
+    .map((line) => line.split(/\s+/)[0]);
+}
+
 /**
  * Concrete paths for a redirect pattern. `:name` becomes a sample segment, and
- * `:name*`, which matches zero or more segments, becomes both none and two.
+ * `:name*` and a trailing `/*`, which match zero or more segments, become both
+ * none and two.
  */
 export function samplePaths(source) {
   const named = source.replace(/:(\w+)(?![\w*])/g, (_, name) =>
     name === "n" ? "2" : `sample-${name}`,
   );
-  if (!/\/:\w+\*/.test(named)) return [named];
+  const splat = /\/(:\w+)?\*$/;
+  if (!splat.test(named)) return [named];
   return [
-    named.replace(/\/:\w+\*/, "") || "/",
-    named.replace(/\/:\w+\*/, "/sample/path"),
+    named.replace(splat, "") || "/",
+    named.replace(splat, "/sample/path"),
   ];
 }
 
@@ -82,25 +94,18 @@ const describe = ({ status, location }) =>
   location ? `${status} -> ${location}` : `${status}`;
 
 async function main() {
-  const [reference, candidate, redirectsConfig] = process.argv
+  const [reference, candidate] = process.argv
     .slice(2)
-    .map((arg, i) => (i < 2 ? arg.replace(/\/+$/, "") : arg));
+    .map((arg) => arg.replace(/\/+$/, ""));
   if (!reference || !candidate) {
-    console.error(
-      "Usage: node scripts/url-parity.mjs <reference> <candidate> [redirects-config]",
-    );
+    console.error("Usage: node scripts/url-parity.mjs <reference> <candidate>");
     process.exit(2);
   }
 
   const paths = new Set(await sitemapPaths(reference));
   const fromSitemap = paths.size;
-  if (redirectsConfig) {
-    const config = createRequire(import.meta.url)(
-      path.resolve(redirectsConfig),
-    );
-    for (const { source } of await config.redirects()) {
-      for (const sample of samplePaths(source)) paths.add(sample);
-    }
+  for (const source of redirectSources(readFileSync(REDIRECTS_FILE, "utf8"))) {
+    for (const sample of samplePaths(source)) paths.add(sample);
   }
   console.log(
     `${paths.size} paths: ${fromSitemap} from the sitemap, ${paths.size - fromSitemap} redirect sources.`,

@@ -1,5 +1,11 @@
 import { describe, it, expect } from "vitest";
-import { normaliseLocation, samplePaths, sitemapPaths } from "./url-parity.mjs";
+import { readFileSync } from "node:fs";
+import {
+  normaliseLocation,
+  redirectSources,
+  samplePaths,
+  sitemapPaths,
+} from "./url-parity.mjs";
 
 describe("samplePaths", () => {
   it("leaves a literal path alone", () => {
@@ -12,11 +18,36 @@ describe("samplePaths", () => {
     ]);
   });
 
+  it("treats a trailing splat like a zero-or-more segment", () => {
+    expect(samplePaths("/categories/main-quest/*")).toEqual([
+      "/categories/main-quest",
+      "/categories/main-quest/sample/path",
+    ]);
+  });
+
   it("tries a zero-or-more segment both empty and filled", () => {
     expect(samplePaths("/tags/film/:path*")).toEqual([
       "/tags/film",
       "/tags/film/sample/path",
     ]);
+  });
+});
+
+describe("redirectSources", () => {
+  it("takes each rule's source and skips comments and blank lines", () => {
+    expect(
+      redirectSources("# note\n\n/a /b 308\n  /c/:slug /d/:slug 308\n"),
+    ).toEqual(["/a", "/c/:slug"]);
+  });
+
+  it("includes every source in this repo's own _redirects", () => {
+    const file = readFileSync("public/_redirects", "utf8");
+    const sources = redirectSources(file);
+    expect(sources).toContain("/categories/main-quest");
+    expect(sources).toContain("/tags/:slug/page/:n");
+    // Known-bad control: a parser that kept comments would fail this.
+    expect(sources.some((s: string) => s.startsWith("#"))).toBe(false);
+    expect(sources.length).toBeGreaterThan(5);
   });
 });
 
