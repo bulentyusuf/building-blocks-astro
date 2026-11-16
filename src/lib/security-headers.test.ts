@@ -132,9 +132,9 @@ describe("the static headers file", () => {
     }
   });
 
-  it("serves a post's social card as a PNG, whatever its file name", () => {
+  it("serves a post's social card as a JPEG, whatever its file name", () => {
     const pattern = "/posts/:slug/opengraph-image";
-    expect(open).toContain(`${pattern}\n  Content-Type: image/png`);
+    expect(open).toContain(`${pattern}\n  Content-Type: image/jpeg`);
   });
 
   it("would intersect two policies if a relaxed rule did not detach", () => {

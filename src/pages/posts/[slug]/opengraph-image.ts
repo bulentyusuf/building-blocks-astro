@@ -7,7 +7,7 @@ import type { ListPost } from "../../../lib/types";
 
 // One social card per published post, at the URL the page's og:image names.
 // This writes what the card says. The build's last step, in
-// integrations/og-cards.ts, draws it and replaces this file with the PNG,
+// integrations/og-cards.ts, draws it and replaces this file with the JPEG,
 // because the image renderer cannot run in the runtime that renders pages.
 export const getStaticPaths = (async () => {
   const posts = await getAllPosts(false);

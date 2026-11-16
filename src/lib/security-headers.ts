@@ -105,7 +105,7 @@ export function staticHeadersFile({
   );
   // The cards have no file extension for the host to read a type from.
   const cards = block("/posts/:slug/opengraph-image", {
-    "Content-Type": "image/png",
+    "Content-Type": "image/jpeg",
   });
   return [block("/*", base), ...relaxed, cards].join("\n\n") + "\n";
 }
