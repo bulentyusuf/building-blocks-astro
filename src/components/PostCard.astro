@@ -15,6 +15,15 @@ interface Props {
 const { post, showStrand, across } = Astro.props;
 const strand = strandFor(post.category) ?? STRANDS[0];
 const closing = across === "closing";
+// Each claim keeps rem spacing and the px borders apart, so it stays exact
+// at any font size. The frame is 70rem inside its padding, gaps 2.25rem. The
+// closing card's cover is half a full row, so its borders cost it 3px, not 6.
+const border = closing ? "3px" : "6px";
+const twoAcross = `(width < 48rem) calc(100vw - 2rem - 6px), (width < 75rem) calc(50vw - 3.625rem - ${border}), `;
+const sizes =
+  across === 2
+    ? `${twoAcross}calc(33.875rem - 6px)`
+    : `${twoAcross}(width < 80rem) calc(33.875rem - ${border}), calc(65.5rem / 3 - 6px)`;
 ---
 
 <!-- Whole class strings throughout, so Tailwind sees each one. -->
@@ -28,11 +37,7 @@ const closing = across === "closing";
   ]}
 >
   <!-- One column to md, then two, then `across` from xl. -->
-  <CardCover
-    post={post}
-    sizes={`(width < 48rem) calc(100vw - 2.375rem), (width < 75rem) calc(50vw - 4rem), ${across === 2 ? "540px" : "(width < 80rem) 540px, 343px"}`}
-    class="aspect-3/2"
-  />
+  <CardCover post={post} sizes={sizes} class="aspect-3/2" />
   <div
     class={
       closing

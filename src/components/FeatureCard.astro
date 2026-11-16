@@ -33,7 +33,7 @@ const strand = strandFor(post.category) ?? STRANDS[0];
   <CardCover
     post={post}
     priority
-    sizes="(width < 48rem) calc(100vw - 2.375rem), (width < 75rem) calc(100vw - 5.375rem), (width < 80rem) 1114px, 557px"
+    sizes="(width < 48rem) calc(100vw - 2rem - 6px), (width < 75rem) calc(100vw - 5rem - 6px), (width < 80rem) calc(70rem - 6px), calc(35rem - 3px)"
     class="aspect-3/2 xl:col-span-6"
   />
   <div class="flex flex-col gap-4 px-4 pb-5 md:px-6 md:pb-7 xl:col-span-6 xl:self-center xl:px-8 xl:py-4">
