@@ -110,10 +110,12 @@ describe("a page held in the route cache", () => {
     for (const allowIndexing of [false, true]) {
       const file = staticHeadersFile({ allowIndexing });
       for (const path of pages) {
-        const { "Cache-Control": _, ...headers } = cachedPageHeaders(
-          path,
-          allowIndexing,
-        );
+        // These two the static host adds itself, outside the file.
+        const {
+          "Cache-Control": _cache,
+          "Content-Type": _type,
+          ...headers
+        } = cachedPageHeaders(path, allowIndexing);
         expect(headers, `${path} ${allowIndexing}`).toEqual(
           Object.fromEntries(resolveStatic(file, path)),
         );
@@ -131,9 +133,9 @@ describe("a page held in the route cache", () => {
   });
 
   it("has a browser ask again on every visit, as a static page does", () => {
-    expect(cachedPageHeaders("/", true)["Cache-Control"]).toBe(
-      "public, max-age=0, must-revalidate",
-    );
+    const headers = cachedPageHeaders("/", true);
+    expect(headers["Cache-Control"]).toBe("public, max-age=0, must-revalidate");
+    expect(headers["Content-Type"]).toBe("text/html; charset=utf-8");
   });
 });
 

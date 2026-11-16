@@ -174,6 +174,20 @@ describe("with the route cache on", () => {
     );
   });
 
+  it("gives a held page a validator made from its bytes", async () => {
+    const tag = async (body: string) =>
+      (await on("/posts/a", new Response(body, page()))).headers.get("ETag");
+    expect(await tag("one")).toMatch(/^"[0-9a-f]{32}"$/);
+    expect(await tag("one")).toBe(await tag("one"));
+    expect(await tag("one")).not.toBe(await tag("two"));
+    // The body still arrives whole.
+    const response = await on("/posts/a", new Response("one", page()));
+    expect(await response.text()).toBe("one");
+    // Known-bad control: nothing that is not held gets one.
+    const draft = await on("/preview/posts/a", new Response("one", page()));
+    expect(draft.headers.has("ETag")).toBe(false);
+  });
+
   it("keeps a held page out of search engines unless the build is open", async () => {
     const closed = await on("/posts/a", page());
     expect(closed.headers.get("X-Robots-Tag")).toBe("noindex");

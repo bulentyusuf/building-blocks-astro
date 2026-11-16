@@ -88,8 +88,10 @@ export function cachedPageHeaders(
     ...SECURITY_HEADERS,
     [CSP]: contentSecurityPolicyFor(pathname, allowIndexing),
     ...(allowIndexing ? {} : { "X-Robots-Tag": "noindex" }),
-    // The static host's own answer for a page: a browser asks again each visit.
+    // The static host's own answers for a page: a browser asks again each
+    // visit, and the type names the charset.
     "Cache-Control": "public, max-age=0, must-revalidate",
+    "Content-Type": "text/html; charset=utf-8",
   };
 }
 

@@ -29,6 +29,13 @@ function held(url: URL, response: Response): boolean {
   );
 }
 
+async function fingerprint(body: ArrayBuffer): Promise<string> {
+  const digest = await crypto.subtle.digest("SHA-256", body);
+  return [...new Uint8Array(digest).subarray(0, 16)]
+    .map((byte) => byte.toString(16).padStart(2, "0"))
+    .join("");
+}
+
 // A page's file name: /archive.html, /index.html, /posts/a/index.html.
 const FILE_NAME = /(\/index)?\.html$/;
 
@@ -78,6 +85,14 @@ export async function respond(
     headers.set("Location", location.split("?")[0]);
     headers.delete("Content-Type");
     return new Response(null, { status: response.status, headers });
+  }
+
+  // A static page carries a validator, so a returning browser is told "not
+  // modified" and downloads nothing. A held page gets one from its own bytes.
+  if (cached) {
+    const body = await response.arrayBuffer();
+    headers.set("ETag", `"${await fingerprint(body)}"`);
+    return new Response(body, { status: response.status, headers });
   }
 
   // Rebuilt, because a response from the static host has immutable headers.
