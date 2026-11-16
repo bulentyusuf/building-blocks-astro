@@ -1,19 +1,27 @@
 ---
 import PostStream from "../components/PostStream.astro";
 import Layout from "../layouts/Layout.astro";
-import { getAllPosts } from "../lib/api";
+import { getAllAuthors, getAllPosts } from "../lib/api";
+import { listingPageTags } from "../lib/cache-tags";
 import {
   HOME_DESCRIPTION,
   HOME_TITLE,
   SITE_TITLE,
   SITE_URL,
 } from "../lib/constants";
+import { hold } from "../lib/route-cache";
 import { visibleTagSlugs } from "../lib/tags";
 
 // The feature card and five cards, then the archive. No pager and no rows.
 const STREAM_POSTS = 6;
 
-const allPosts = await getAllPosts(false);
+// The authors are the footer's, read here for the cache tags.
+const [allPosts, authors] = await Promise.all([
+  getAllPosts(false),
+  getAllAuthors(false),
+]);
+const posts = allPosts.slice(0, STREAM_POSTS);
+hold(Astro.cache, listingPageTags(posts, authors));
 ---
 
 <Layout title={HOME_TITLE} description={HOME_DESCRIPTION} canonical={SITE_URL}>
@@ -22,7 +30,7 @@ const allPosts = await getAllPosts(false);
     <h1 class="sr-only">{SITE_TITLE}</h1>
 
     <PostStream
-      posts={allPosts.slice(0, STREAM_POSTS)}
+      posts={posts}
       visibleTags={visibleTagSlugs(allPosts)}
       showStrand
     />

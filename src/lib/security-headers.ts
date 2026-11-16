@@ -1,5 +1,5 @@
 // The one definition of the site's response headers. Static files get them
-// from the generated `_headers` file, on-demand routes from the middleware.
+// from the generated `_headers` file, Worker responses from src/worker.ts.
 
 export const CMS_ORIGIN = "https://app.contentful.com";
 
@@ -73,6 +73,25 @@ export function onDemandHeaders(pathname: string): Record<string, string> {
     [CSP]: contentSecurityPolicyFor(pathname),
     "X-Robots-Tag": "noindex",
     "Cache-Control": "private, no-store",
+  };
+}
+
+/**
+ * What a public page held in the route cache carries: a static file's
+ * headers, since it stands where one stood. Indexable only on an open build.
+ */
+export function cachedPageHeaders(
+  pathname: string,
+  allowIndexing: boolean,
+): Record<string, string> {
+  return {
+    ...SECURITY_HEADERS,
+    [CSP]: contentSecurityPolicyFor(pathname, allowIndexing),
+    ...(allowIndexing ? {} : { "X-Robots-Tag": "noindex" }),
+    // The static host's own answers for a page: a browser asks again each
+    // visit, and the type names the charset.
+    "Cache-Control": "public, max-age=0, must-revalidate",
+    "Content-Type": "text/html; charset=utf-8",
   };
 }
 

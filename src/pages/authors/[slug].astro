@@ -9,8 +9,10 @@ import {
   getGermanPostSlugs,
 } from "../../lib/api";
 import { postsByAuthor } from "../../lib/authors";
+import { listingPageTags } from "../../lib/cache-tags";
 import { SITE_TITLE, SITE_URL } from "../../lib/constants";
 import { renderRichText } from "../../lib/rich-text";
+import { hold, missing } from "../../lib/route-cache";
 import { visibleTagSlugs } from "../../lib/tags";
 import { widont } from "../../lib/typography";
 
@@ -23,14 +25,17 @@ export async function getStaticPaths() {
 
 const slug = Astro.params.slug!;
 // Filtered in memory: Contentful cannot filter on a list of links.
-const [author, allPosts, germanSlugs] = await Promise.all([
+// Every author too: the footer's, read here for the cache tags.
+const [author, allPosts, germanSlugs, authors] = await Promise.all([
   getAuthorBySlug(slug, false),
   getAllPosts(false),
   getGermanPostSlugs(false),
+  getAllAuthors(false),
 ]);
-if (!author) throw new Error(`No published author for "${slug}".`);
+if (!author) return missing(Astro, `No published author for "${slug}".`);
 
 const posts = postsByAuthor(allPosts, slug);
+hold(Astro.cache, listingPageTags(posts, authors, author));
 const closing =
   posts.length === 0
     ? "No posts by this author yet."

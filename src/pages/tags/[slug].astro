@@ -1,8 +1,15 @@
 ---
 import CollectionPage from "../../components/CollectionPage.astro";
 import Layout from "../../layouts/Layout.astro";
-import { getAllPosts, getGermanPostSlugs, getTagBySlug } from "../../lib/api";
+import {
+  getAllAuthors,
+  getAllPosts,
+  getGermanPostSlugs,
+  getTagBySlug,
+} from "../../lib/api";
+import { listingPageTags } from "../../lib/cache-tags";
 import { SITE_TITLE, SITE_URL } from "../../lib/constants";
+import { hold, missing } from "../../lib/route-cache";
 import { postsWithTag, visibleTagSlugs } from "../../lib/tags";
 import { widont } from "../../lib/typography";
 
@@ -13,18 +20,23 @@ export async function getStaticPaths() {
 }
 
 const slug = Astro.params.slug!;
-const [tag, allPosts, germanSlugs] = await Promise.all([
+// The authors are the footer's, read here for the cache tags.
+const [tag, allPosts, germanSlugs, authors] = await Promise.all([
   getTagBySlug(slug, false),
   getAllPosts(false),
   getGermanPostSlugs(false),
+  getAllAuthors(false),
 ]);
-if (!tag) throw new Error(`No published tag for "${slug}".`);
+const visible = visibleTagSlugs(allPosts);
+// On request the same floor applies: a one-post tag has no page.
+if (!tag || !visible.has(slug)) {
+  return missing(Astro, `No published tag with a page for "${slug}".`);
+}
 
 const posts = postsWithTag(allPosts, slug);
+hold(Astro.cache, listingPageTags(posts, authors, tag));
 // Each card's own tag pill would repeat the page; the others still show.
-const otherTags = new Set(
-  [...visibleTagSlugs(allPosts)].filter((s) => s !== slug),
-);
+const otherTags = new Set([...visible].filter((s) => s !== slug));
 ---
 
 <Layout
