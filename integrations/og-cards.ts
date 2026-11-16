@@ -5,7 +5,7 @@ import sharp from "sharp";
 import { CARD_SIZE, ogCard, type CardContent } from "../src/lib/og-card";
 
 // Draws each post's social card. The page build leaves the card's content at
-// posts/<slug>/opengraph-image; this replaces it with the PNG, in Node,
+// posts/<slug>/opengraph-image; this replaces it with a JPEG, in Node,
 // because the image renderer cannot run in the runtime that renders pages. A
 // card that cannot be drawn fails the build, so its content is never published
 // in the image's place.
@@ -61,7 +61,13 @@ export function ogCards(): AstroIntegration {
               ],
             },
           );
-          await writeFile(file, await sharp(Buffer.from(svg)).png().toBuffer());
+          // JPEG, because the cover panel is a photo: about a tenth of the PNG.
+          await writeFile(
+            file,
+            await sharp(Buffer.from(svg))
+              .jpeg({ quality: 82, mozjpeg: true })
+              .toBuffer(),
+          );
         }
         logger.info(`Drew ${slugs.length} social cards.`);
       },
