@@ -24,9 +24,24 @@ can. No UI framework ships to the browser.
 
 ## How the site is served
 
-- **Public pages are static files.** Only `/api/*`, `/preview/*` and the
-  adapter's `/_image`, which serves this site's own static images and nothing
-  else, run in the Worker. A new on-demand route needs a reason.
+- **Public pages are static files unless `ROUTE_CACHE=true`.** Then the pages
+  in `ON_DEMAND_PAGES` (`integrations/route-cache.ts`) render on request and
+  Cloudflare's cache holds them. Otherwise only `/api/*`, `/preview/*` and the
+  adapter's `/_image` run in the Worker. A new on-demand route needs a reason.
+- **`ROUTE_CACHE` is a kill switch, so the off state stays exact.** Unset, the
+  built site is byte-identical to one without the feature. Nothing may run,
+  render or be configured differently unless the switch is on.
+- **A page renders the same either way.** `missing()` fails a build and is a
+  404 on request, `hold()` is a no-op on a built page. Cache tags are set in
+  the page's frontmatter: a component can run after the response has begun.
+- **A cached page is tagged with the id of everything it shows**, through
+  `src/lib/cache-tags.ts`. A query feeding a cached page selects `sys { id }`.
+- **The purge endpoint purges by tag only.** One webhook event, one purge
+  call. Never `purgeEverything`: a deploy is what empties the cache.
+- **A built page must never shadow an on-demand route.** The static host
+  serves a file before the Worker runs. The build fails if one would.
+- **The rebuild on publish stays.** It writes the search index, the feed, the
+  sitemap and the social cards, and its deploy empties the cache.
 - **Pages are rendered in the Workers runtime at build**, the adapter's
   default, so code shared with the draft pages cannot pass a build and then
   fail in the Worker. Do not switch prerendering to Node.
@@ -49,10 +64,14 @@ can. No UI framework ships to the browser.
   `'wasm-unsafe-eval'` on `/search` and `/pagefind/*` only, Contentful framing
   on `/preview/*` only. Never on the base policy.
 - **A build is closed to search engines unless `ALLOW_INDEXING=true`.** Every
-  Worker response is `noindex` and `no-store`, always.
+  Worker response is `noindex` and `no-store`, except a public page held in
+  the route cache, which takes exactly the headers its static file had.
+- **Nothing private is ever cached.** `src/worker.ts` refuses to hold a draft,
+  an endpoint, a redirect, an error or a response that sets a cookie,
+  whatever the route asked for.
 - **Secrets are read from the environment, through `astro:env`.** Never commit
-  one, never inline one at build. The preview token and secret are used only
-  on the server.
+  one, never inline one at build. The preview token and both secrets are used
+  only on the server, and each is compared through `safeCompare`.
 - **The analytics beacon and its two CSP hosts are tied to `ALLOW_INDEXING`.**
   Public pages only, never `/preview/*`, never a closed build.
 - **Draft pages are gated in the middleware**, not in each page. A new draft
@@ -71,6 +90,9 @@ can. No UI framework ships to the browser.
   this.
 - **Pagefind's script and styles load on `/search` only**, and `/search` is
   `noindex`.
+- **The index is built from built pages.** With `ROUTE_CACHE=true` those are
+  the copies from `src/search-source.astro`, which must render a post exactly
+  as `src/pages/posts/[slug].astro` does and are deleted before deploy.
 - **Only an English post's `h1` and `<article>` carry `data-pagefind-body`.**
   German is not indexed. Anything inside that is not the post's own words
   needs `data-pagefind-ignore`: `aria-hidden` and `opacity-0` do not hide
