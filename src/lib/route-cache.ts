@@ -16,11 +16,14 @@ export function missing(
 
 /** Holds a page rendered on request in the route cache, under its tags. */
 export function hold(
-  cache: {
-    enabled: boolean;
-    set(options: { maxAge: number; tags: string[] }): void;
-  },
+  // Astro.cache is absent where a page renders outside a request, as in the test container.
+  cache:
+    | {
+        enabled: boolean;
+        set(options: { maxAge: number; tags: string[] }): void;
+      }
+    | undefined,
   tags: string[],
 ): void {
-  if (cache.enabled) cache.set({ maxAge: CACHE_MAX_AGE, tags });
+  if (cache?.enabled) cache.set({ maxAge: CACHE_MAX_AGE, tags });
 }

@@ -165,4 +165,8 @@ describe("holding a page", () => {
     hold({ enabled: false, set }, ["post1"]);
     expect(set).not.toHaveBeenCalled();
   });
+
+  it("does nothing, and does not throw, when there is no cache", () => {
+    expect(() => hold(undefined, ["x"])).not.toThrow();
+  });
 });
