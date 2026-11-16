@@ -5,12 +5,14 @@ import type { APIContext } from "astro";
 // are recorded through the request context and asserted directly.
 
 const getPost = vi.fn();
+const getPage = vi.fn();
 
 vi.mock("astro:env/server", () => ({
   getSecret: (name: string) => process.env[name],
 }));
 vi.mock("../../lib/api", () => ({
   getPost: (...args: unknown[]) => getPost(...args),
+  getPage: (...args: unknown[]) => getPage(...args),
 }));
 
 const { GET } = await import("./draft");
@@ -39,6 +41,8 @@ beforeEach(() => {
   setCookie.mockClear();
   deleteCookie.mockClear();
   getPost.mockReset();
+  getPage.mockReset();
+  getPage.mockResolvedValue({ slug: "privacy" });
   getPost.mockResolvedValue({ slug: "some-post" });
 });
 
@@ -131,6 +135,42 @@ describe("the draft preview route", () => {
     getPost.mockResolvedValue(undefined);
     const response = await open(`secret=${SECRET}&slug=no-such-post`);
     expect(response.status).toBe(404);
+    expect(setCookie).not.toHaveBeenCalled();
+  });
+});
+
+describe("the draft preview route for pages", () => {
+  it("opens the page draft, looked up as a draft, with a session", async () => {
+    const response = await open(`secret=${SECRET}&type=page&slug=privacy`);
+    expect(response.status).toBe(307);
+    expect(response.headers.get("Location")).toBe("/preview/pages/privacy");
+    expect(getPage).toHaveBeenCalledWith("privacy", true);
+    expect(getPost).not.toHaveBeenCalled();
+    expect(setCookie).toHaveBeenCalledOnce();
+  });
+
+  it("ignores the locale, and an explicit post type behaves as before", async () => {
+    const page = await open(
+      `secret=${SECRET}&type=page&slug=privacy&locale=de-DE`,
+    );
+    expect(page.headers.get("Location")).toBe("/preview/pages/privacy");
+    const post = await open(`secret=${SECRET}&type=post&slug=some-post`);
+    expect(post.headers.get("Location")).toBe("/preview/posts/some-post");
+  });
+
+  it("refuses a wrong secret, an unknown slug and an unknown type", async () => {
+    expect((await open("secret=nope&type=page&slug=privacy")).status).toBe(401);
+    expect(getPage).not.toHaveBeenCalled();
+    getPage.mockResolvedValue(undefined);
+    expect(
+      (await open(`secret=${SECRET}&type=page&slug=no-such-page`)).status,
+    ).toBe(404);
+    // Known-bad control: a page slug must not be looked up as a post, or a
+    // post's slug would open a page preview.
+    expect(getPost).not.toHaveBeenCalled();
+    expect(
+      (await open(`secret=${SECRET}&type=entry&slug=privacy`)).status,
+    ).toBe(400);
     expect(setCookie).not.toHaveBeenCalled();
   });
 });

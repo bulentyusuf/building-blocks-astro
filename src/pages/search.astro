@@ -237,6 +237,8 @@ const RESULT_TEMPLATE = `
     border: 3px solid var(--color-outline);
     border-radius: 14px;
     background-color: var(--color-card);
+    /* Holds the box's height before its script loads. */
+    min-height: calc(var(--pf-input-height) + 6px);
   }
   .pagefind-scope pagefind-results:has(.result-item) {
     display: block;
@@ -251,7 +253,7 @@ const RESULT_TEMPLATE = `
 
   /* The summary as a // label, the slashes kept out of its accessible name. */
   .pagefind-scope pagefind-summary {
-    display: flex;
+    display: none;
     gap: 1ch;
     font-family: var(--font-mono);
     font-weight: 500;
@@ -263,12 +265,13 @@ const RESULT_TEMPLATE = `
     font-size: var(--pf-summary-font-size);
     color: var(--color-brand-muted);
   }
-  /* Toggled from the preceding input: a descendant :has does not invalidate
+  /* Shown once a query is typed, so it never flashes before the input loads.
+     Toggled from the preceding input: a descendant :has does not invalidate
      reliably here. */
   .pagefind-scope
-    pagefind-input:has(input:placeholder-shown)
+    pagefind-input:has(input:not(:placeholder-shown))
     ~ pagefind-summary {
-    display: none;
+    display: flex;
   }
 
   /* The emblem shows only while the input is empty, so the placeholder must

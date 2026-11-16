@@ -169,9 +169,9 @@ describe("the static headers file", () => {
     }
   });
 
-  it("serves a post's social card as a PNG, whatever its file name", () => {
+  it("serves a post's social card as a JPEG, whatever its file name", () => {
     const pattern = "/posts/:slug/opengraph-image";
-    expect(open).toContain(`${pattern}\n  Content-Type: image/png`);
+    expect(open).toContain(`${pattern}\n  Content-Type: image/jpeg`);
   });
 
   it("would intersect two policies if a relaxed rule did not detach", () => {
@@ -205,7 +205,11 @@ describe("analytics", () => {
   });
 
   it("never reach a draft page or an endpoint", () => {
-    for (const path of ["/preview/posts/a", "/api/draft"]) {
+    for (const path of [
+      "/preview/posts/a",
+      "/preview/pages/privacy",
+      "/api/draft",
+    ]) {
       expect(onDemandHeaders(path)[CSP], path).not.toContain(
         "cloudflareinsights",
       );
@@ -218,6 +222,15 @@ describe("analytics", () => {
     expect(
       hosts(resolveStatic(stripped, "/").get(CSP) ?? "", "script-src"),
     ).not.toEqual([ANALYTICS_SCRIPT_ORIGIN]);
+  });
+
+  it("stay off a page draft, which passes its draft flag to the layout", () => {
+    const page = readFileSync("src/components/ContentPage.astro", "utf8");
+    const route = readFileSync("src/pages/preview/pages/[slug].astro", "utf8");
+    expect(page).toMatch(/<Layout[^>]*\bpreview=\{preview\}/);
+    expect(page).toContain("getPage(slug, preview)");
+    expect(route).toMatch(/<ContentPage[^>]*\bpreview\b/);
+    expect(route).toContain("prerender = false");
   });
 
   it("render in the layout only on an open build and never on a draft", () => {

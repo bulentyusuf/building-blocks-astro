@@ -17,9 +17,9 @@
       "CONTENTFUL_WEBHOOK_SECRET",
     ],
   },
-  // Stated, so this file and the dashboard agree: the workers.dev address and
-  // a preview address per branch build are both on.
-  "workers_dev": true,
+  // Stated, so this file and the dashboard agree. The site lives on its own
+  // domain, so the workers.dev copy is off; branch previews stay on.
+  "workers_dev": false,
   "preview_urls": true,
   "observability": { "enabled": true },
 }

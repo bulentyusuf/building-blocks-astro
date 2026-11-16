@@ -45,6 +45,15 @@ describe("headers on every Worker response", () => {
     }
   });
 
+  it("treat a page draft as a draft: framed, unindexed, unstored", async () => {
+    const draft = await send("/preview/pages/privacy", new Response("ok"));
+    expect(draft.headers.get("Content-Security-Policy")).toContain(
+      "frame-ancestors 'self' https://app.contentful.com;",
+    );
+    expect(draft.headers.get("X-Robots-Tag")).toBe("noindex");
+    expect(draft.headers.get("Cache-Control")).toBe("private, no-store");
+  });
+
   it("let Contentful frame a draft page and nothing else", async () => {
     const draft = await send("/preview/posts/a", new Response("rendered"));
     expect(draft.headers.get("Content-Security-Policy")).toContain(

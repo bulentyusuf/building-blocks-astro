@@ -32,7 +32,11 @@ beforeEach(() => {
 
 describe("the draft gate", () => {
   it("refuses a draft page without a session, and never renders it", async () => {
-    for (const path of ["/preview/posts/a", "/preview/de/posts/a"]) {
+    for (const path of [
+      "/preview/posts/a",
+      "/preview/de/posts/a",
+      "/preview/pages/privacy",
+    ]) {
       const { next, response } = request(path, {});
       expect((await response).status, path).toBe(401);
       expect(next).not.toHaveBeenCalled();

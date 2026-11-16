@@ -63,6 +63,7 @@
     const caption = dialog.querySelector("figcaption")!;
     const closeButton = dialog.querySelector("button")!;
     let opener: HTMLElement | null = null;
+    let showing: HTMLImageElement | null = null;
 
     const size = (image: HTMLImageElement) => ({
       width: Number(image.getAttribute("width")),
@@ -77,8 +78,14 @@
       view.width = width;
       view.height = height;
       view.alt = image.alt;
-      view.srcset = image.srcset;
-      view.src = image.src;
+      // The view is reused, so start from the file the page already shows,
+      // or the last picture lingers until the sharp one arrives.
+      showing = image;
+      view.removeAttribute("srcset");
+      view.src = image.currentSrc || image.src;
+      requestAnimationFrame(() => {
+        if (showing === image) view.srcset = image.srcset;
+      });
       frame.style.width = enlargedWidth(width, height);
       caption.textContent = text;
       caption.hidden = !text;
@@ -98,6 +105,7 @@
       if (event.target !== view) dialog.close();
     });
     dialog.addEventListener("close", () => {
+      showing = null;
       opener?.focus();
       judge();
     });

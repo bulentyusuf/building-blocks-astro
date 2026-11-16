@@ -426,13 +426,14 @@ export const getPostAndMorePosts = memoise(
 );
 
 // de-DE has no fallback, so an untranslated field is null, never English. A post
-// counts as German once title and excerpt are filled.
+// counts as German once title, excerpt and content are filled.
 export const getGermanPostSlugs = memoise(
   async (preview: boolean): Promise<string[]> => {
     const items = await fetchAllCollectionItems<{
       slug: string;
       title: string | null;
       excerpt: string | null;
+      content: { json: unknown } | null;
     }>(
       "postCollection",
       `query GetGermanPostSlugs($preview: Boolean, $limit: Int!, $skip: Int!) {
@@ -442,6 +443,9 @@ export const getGermanPostSlugs = memoise(
           slug
           title
           excerpt
+          content {
+            json
+          }
         }
       }
     }`,
@@ -449,7 +453,9 @@ export const getGermanPostSlugs = memoise(
       { preview },
     );
 
-    return items.filter((p) => p.title && p.excerpt).map((p) => p.slug);
+    return items
+      .filter((p) => p.title && p.excerpt && p.content?.json)
+      .map((p) => p.slug);
   },
 );
 
