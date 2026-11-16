@@ -1,0 +1,34 @@
+---
+import PostPage from "./components/PostPage.astro";
+import {
+  getAllPosts,
+  getGermanPostSlugs,
+  getPostAndMorePosts,
+} from "./lib/api";
+
+// With the route cache on, an English post is rendered on request and leaves
+// no built page for the search index to read. This builds each one again, as
+// src/pages/posts/[slug].astro does, at an address that is never deployed:
+// the index reads the files and deletes them.
+export async function getStaticPaths() {
+  const posts = await getAllPosts(false);
+  return posts.map((post) => ({ params: { slug: post.slug } }));
+}
+
+const slug = Astro.params.slug!;
+const [{ post, morePosts }, allPosts, germanSlugs] = await Promise.all([
+  getPostAndMorePosts(slug, false),
+  getAllPosts(false),
+  getGermanPostSlugs(false),
+]);
+if (!post) throw new Error(`No published post for "${slug}".`);
+---
+
+<PostPage
+  post={post}
+  morePosts={morePosts}
+  allPosts={allPosts}
+  slug={slug}
+  german={false}
+  translated={germanSlugs.includes(slug)}
+/>

@@ -4,6 +4,8 @@ import {
   ON_DEMAND_PAGES,
   routeCache,
   routeCacheOn,
+  servedPath,
+  shadowing,
 } from "../../integrations/route-cache";
 import { CACHE_MAX_AGE, hold, missing } from "./route-cache";
 
@@ -73,6 +75,64 @@ describe("the route cache switch", () => {
         /Astro\.cache|hold\(/,
       );
     }
+  });
+});
+
+describe("a built page that would shadow an on-demand route", () => {
+  // The static host answers with a file before the Worker runs.
+  const route = (pattern: RegExp, isPrerendered: boolean) => ({
+    patternRegex: pattern,
+    isPrerendered,
+  });
+  const routes = [
+    route(/^\/$/, false),
+    route(/^\/archive$/, false),
+    route(/^\/posts\/([^/]+?)$/, false),
+    route(/^\/about$/, true),
+    route(/^\/posts\/([^/]+?)\/opengraph-image$/, true),
+  ];
+
+  it("is found at the address the host would serve it from", () => {
+    expect(servedPath("index.html")).toBe("/");
+    expect(servedPath("archive.html")).toBe("/archive");
+    expect(servedPath("posts/a.html")).toBe("/posts/a");
+    expect(servedPath("posts/a/index.html")).toBe("/posts/a");
+  });
+
+  it("fails the build", () => {
+    // Known-bad control: these are the files a build must never leave.
+    const files = ["index.html", "archive.html", "posts/a.html"];
+    expect(shadowing(files, routes)).toEqual(files);
+  });
+
+  it("is not a built page, a social card or any other file", () => {
+    const files = [
+      "about.html",
+      "404.html",
+      "posts/a/opengraph-image",
+      "search-source/a.html",
+      "feed.xml",
+      "_astro/index.css",
+    ];
+    expect(shadowing(files, routes)).toEqual([]);
+  });
+});
+
+describe("the pages built for the search index", () => {
+  const view = (file: string) =>
+    /<PostPage[\s\S]*?\/>/.exec(readFileSync(file, "utf8"))?.[0];
+
+  it("render a post exactly as its own page does", () => {
+    const page = view("src/pages/posts/[slug].astro");
+    expect(page).toContain("german={false}");
+    expect(view("src/search-source.astro")).toBe(page);
+  });
+
+  it("are never held or deployed", () => {
+    const source = readFileSync("src/search-source.astro", "utf8");
+    expect(source).not.toMatch(/Astro\.cache|hold\(/);
+    const index = readFileSync("integrations/search-index.ts", "utf8");
+    expect(index).toMatch(/await rm\(source, \{ recursive: true \}\)/);
   });
 });
 
