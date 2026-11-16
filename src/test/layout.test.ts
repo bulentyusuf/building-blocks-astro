@@ -75,7 +75,7 @@ describe("card covers", () => {
     wrongClaims(await measure("index.astro", coversInPage, { width }));
 
   // Each side of every breakpoint the cards change at, and past the frame.
-  it.each([375, 767, 1200, 1279, 1280, 1440])(
+  it.each([375, 767, 768, 1024, 1199, 1200, 1279, 1280, 1440])(
     "claim the width they render at, at %ipx",
     async (width) => {
       expect(await claims(width)).toEqual([]);
@@ -83,12 +83,17 @@ describe("card covers", () => {
     30_000,
   );
 
-  // An expected failure, left for the site to fix: between 768px and 1199px
-  // the fifth card, set beside its text, renders 3px wider than it claims.
-  it.fails.each([768, 1024, 1199])(
-    "claim the width they render at, at %ipx",
+  // The author reads at a 20px root, where a border written in rem drifts.
+  // Only the root grows here, not the media queries, so widths where the
+  // frame is uncapped but xl applies are skipped: no real browser gets there.
+  it.each([375, 768, 1024, 1199, 1700, 2000])(
+    "claim the width they render at, at %ipx with a 20px root",
     async (width) => {
-      expect(await claims(width)).toEqual([]);
+      const covers = await measure("index.astro", coversInPage, {
+        width,
+        css: "html{font-size:20px}",
+      });
+      expect(wrongClaims(covers)).toEqual([]);
     },
     30_000,
   );
