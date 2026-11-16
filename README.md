@@ -191,7 +191,9 @@ takes its own copy when it is first created, so fixing Previews Base later does
 not repair an existing preview.
 
 `workers_dev` and `preview_urls` are set in `wrangler.jsonc` on purpose,
-because saving settings in the dashboard can otherwise switch them off.
+because saving settings in the dashboard can otherwise switch them off. The
+`workers.dev` copy of the site is off, since beuseful.net serves it. Branch
+preview addresses stay on.
 
 ## Licence
 
