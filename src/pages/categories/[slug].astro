@@ -2,12 +2,15 @@
 import PostStream from "../../components/PostStream.astro";
 import Layout from "../../layouts/Layout.astro";
 import {
+  getAllAuthors,
   getAllCategories,
   getAllPosts,
   getCategoryBySlug,
   getGermanPostSlugs,
 } from "../../lib/api";
+import { listingPageTags } from "../../lib/cache-tags";
 import { SITE_TITLE, SITE_URL } from "../../lib/constants";
+import { hold, missing } from "../../lib/route-cache";
 import { visibleTagSlugs } from "../../lib/tags";
 
 // A strand page is home with its header chip pressed: every post in the
@@ -18,14 +21,17 @@ export async function getStaticPaths() {
 }
 
 const slug = Astro.params.slug!;
-const [category, allPosts, germanSlugs] = await Promise.all([
+// The authors are the footer's, read here for the cache tags.
+const [category, allPosts, germanSlugs, authors] = await Promise.all([
   getCategoryBySlug(slug, false),
   getAllPosts(false),
   getGermanPostSlugs(false),
+  getAllAuthors(false),
 ]);
-if (!category) throw new Error(`No published category for "${slug}".`);
+if (!category) return missing(Astro, `No published category for "${slug}".`);
 
 const posts = allPosts.filter((post) => post.category?.slug === slug);
+hold(Astro.cache, listingPageTags(posts, authors, category));
 const closing =
   posts.length === 0
     ? "Nothing here yet."

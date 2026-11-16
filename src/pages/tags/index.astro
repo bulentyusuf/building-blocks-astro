@@ -1,11 +1,19 @@
 ---
 import WidePage from "../../components/WidePage.astro";
 import Layout from "../../layouts/Layout.astro";
-import { getAllPosts } from "../../lib/api";
+import { getAllAuthors, getAllPosts } from "../../lib/api";
+import { listingPageTags } from "../../lib/cache-tags";
 import { SITE_DESCRIPTION, SITE_TITLE, SITE_URL } from "../../lib/constants";
+import { hold } from "../../lib/route-cache";
 import { MIN_POSTS_PER_TAG, groupPostsByTag } from "../../lib/tags";
 
-const groups = groupPostsByTag(await getAllPosts(false));
+// The authors are the footer's, read here for the cache tags.
+const [posts, authors] = await Promise.all([
+  getAllPosts(false),
+  getAllAuthors(false),
+]);
+hold(Astro.cache, listingPageTags(posts, authors));
+const groups = groupPostsByTag(posts);
 const title = `Tags | ${SITE_TITLE}`;
 ---
 

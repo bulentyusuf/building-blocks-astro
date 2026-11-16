@@ -239,6 +239,55 @@ describe("with the route cache on", () => {
   });
 });
 
+describe("a page's file name, with the route cache on", () => {
+  const ask = async (path: string, routeCache = true) => {
+    const render = vi.fn(async () => new Response("rendered"));
+    const response = await respond(
+      render,
+      new URL(`https://example.com${path}`),
+      { routeCache },
+    );
+    return { render, response };
+  };
+
+  it("redirects to the clean address, as the static host does, unrendered", async () => {
+    for (const [path, clean] of [
+      ["/index.html", "/"],
+      ["/archive.html", "/archive"],
+      ["/posts/a.html", "/posts/a"],
+      ["/posts/a/index.html", "/posts/a"],
+      ["/posts/a.html?x=1", "/posts/a"],
+    ]) {
+      const { render, response } = await ask(path);
+      expect(response.status, path).toBe(307);
+      expect(response.headers.get("Location"), path).toBe(clean);
+      expect(render, path).not.toHaveBeenCalled();
+      expect(response.headers.get("Cache-Control"), path).toBe(
+        "private, no-store",
+      );
+    }
+  });
+
+  it("leaves a clean address, a draft and an endpoint to the framework", async () => {
+    for (const path of [
+      "/posts/a",
+      "/htmlish",
+      "/preview/posts/a.html",
+      "/api/a.html",
+    ]) {
+      const { render, response } = await ask(path);
+      expect(response.status, path).toBe(200);
+      expect(render, path).toHaveBeenCalledOnce();
+    }
+  });
+
+  it("is the framework's to answer with the route cache off, as today", async () => {
+    const { render, response } = await ask("/posts/a.html", false);
+    expect(response.status).toBe(200);
+    expect(render).toHaveBeenCalledOnce();
+  });
+});
+
 describe("with the route cache off", () => {
   it("holds nothing, even a page that asks, and adds no cache header", async () => {
     // Known-bad control for the block above: the same response, switch off.

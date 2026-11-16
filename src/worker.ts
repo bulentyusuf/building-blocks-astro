@@ -16,15 +16,21 @@ const CACHE_TAG = "Cache-Tag";
 // Never held, whatever a route asks for: drafts and the endpoints.
 const PRIVATE_PATHS = [`${PREVIEW_PATH}/`, "/api/"];
 
+const isPrivate = (url: URL) =>
+  PRIVATE_PATHS.some((path) => url.pathname.startsWith(path));
+
 /** A public page that rendered, asked to be cached and sets no cookie. */
 function held(url: URL, response: Response): boolean {
   return (
     response.status === 200 &&
-    !PRIVATE_PATHS.some((path) => url.pathname.startsWith(path)) &&
+    !isPrivate(url) &&
     !response.headers.has("Set-Cookie") &&
     (response.headers.get(EDGE_CACHE) ?? "").startsWith("public")
   );
 }
+
+// A page's file name: /archive.html, /index.html, /posts/a/index.html.
+const FILE_NAME = /(\/index)?\.html$/;
 
 /** Every response the Worker sends, with the on-demand headers on it. */
 export async function respond(
@@ -37,9 +43,18 @@ export async function respond(
   const broken =
     url.pathname.startsWith(`${PREVIEW_PATH}/`) &&
     url.pathname.endsWith("/index.html");
+  // The static host sends a page's file name to its clean address. A page
+  // rendered on request has no file, and the router would render it a second
+  // time under that name, so the Worker sends the same redirect.
+  const named = routeCache && !isPrivate(url) && FILE_NAME.test(url.pathname);
   const response = broken
     ? new Response("Not found", { status: 404 })
-    : await render();
+    : named
+      ? new Response(null, {
+          status: 307,
+          headers: { Location: url.pathname.replace(FILE_NAME, "") || "/" },
+        })
+      : await render();
 
   const headers = new Headers(response.headers);
   // With the route cache on, a held page is public and takes a static file's
