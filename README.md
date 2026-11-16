@@ -312,6 +312,13 @@ you deploy.
   the not-found page's gremlin, `public/404-gremlin.webp`, with its caption
   and alt text in `src/pages/404.astro`, are made for the original site.
   Replace or remove them.
+- **Language and dates.** The site is written in British English. Set
+  `DEFAULT_LOCALE` in `src/lib/constants.ts` to your own, for example
+  `"en-US"`, and the page language, the Open Graph locale, the date format
+  ("16 November 2026" becomes "November 16, 2026") and the order of tags all
+  follow it. The content model's locale is separate and already `en-US`.
+  Some tests check the British format, so `npm test` will name them; update
+  their expected values to match.
 - **German posts (optional).** The content model ships one locale, so a fork
   has no German pages and needs no setup. In a space without German, the
   build's German queries come back empty, with a warning in the build log,
