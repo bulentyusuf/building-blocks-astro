@@ -5,3 +5,8 @@ package-lock.json
 worker-configuration.d.ts
 # Served as they are.
 public
+# Written by tooling as JSON.stringify(payload, null, 2) plus a newline.
+# Prettier would reshape them, and `npm run build:seed` and `npm run
+# format:check` would then contradict each other.
+contentful/export.json
+contentful/seed.json

@@ -87,6 +87,258 @@ A recurring subject of the blog is the process of building and maintaining it. M
 - CodeQL scanning, branch protection and Dependabot, configured in GitHub's settings rather than in the code
 - A URL parity script that compares the live site with a build, path by path
 
+## 🚀 Getting started (fork your own)
+
+The repo is a template. With your own Contentful space and Cloudflare account,
+you can go from a fork to a working copy of the site, with example content to
+look at, in the steps below. Do them in order.
+
+### 1. What you need
+
+- **Node.js**, the version in `engines.node` in `package.json`.
+- **An empty Contentful space.** A new space's default locale is English
+  (United States), `en-US`, and that is what the content model and the
+  example content are written for. Keep it. The site still marks its pages up
+  as British English (`DEFAULT_LOCALE` in `src/lib/constants.ts`), because
+  that is only the `lang` value in the HTML, and the queries read whichever
+  locale is your space's default.
+- **A Cloudflare account.** The free Workers plan is enough to start.
+- **Chrome or Chromium, for the tests.** Some of the tests measure pages in a
+  real browser. If yours is not found, set `CHROME_PATH` to its executable.
+
+### 2. Install
+
+Fork the repo on GitHub, clone your fork, then:
+
+```bash
+npm install
+```
+
+### 3. Configure
+
+```bash
+cp .env.example .env
+```
+
+Then fill in `.env`. It is ignored by git, so nothing in it is committed.
+
+| Value                             | What it is, and where to find it                                                                                                                                                |
+| --------------------------------- | ------------------------------------------------------------------------------------------------------------------------------------------------------------------------------- |
+| `CONTENTFUL_SPACE_ID`             | Your space's id. In Contentful, Settings, API keys, Add API key. The new key's page shows it                                                                                    |
+| `CONTENTFUL_ACCESS_TOKEN`         | The Content Delivery API token, on the same page. It reads published content                                                                                                    |
+| `CONTENTFUL_PREVIEW_ACCESS_TOKEN` | The Content Preview API token, on the same page. It reads drafts, for [draft previews](#draft-previews)                                                                         |
+| `CONTENTFUL_PREVIEW_SECRET`       | Any long random string you make up. It guards draft previews                                                                                                                    |
+| `CONTENTFUL_WEBHOOK_SECRET`       | Another long random string. It is only used by [instant publishing](#instant-publishing), but Cloudflare refuses a deploy without it, so set one now                            |
+| `SITE_URL`                        | Your site's address, such as `https://example.com`. Leave it empty locally. Without it in production, every canonical link, the sitemap and the feed point at the original site |
+| `ALLOW_INDEXING`                  | Leave empty locally. See step 7                                                                                                                                                 |
+| `ROUTE_CACHE`                     | Leave empty. See step 9                                                                                                                                                         |
+
+One way to make a long random string is `openssl rand -hex 32`.
+
+### 4. Import the content model
+
+The content model is the set of content types the site reads: Post, Author,
+Category, Tag, Page, and the Code Block, Prompt Block and Callout types that
+go inside a post. It is in `contentful/export.json`. Import it with:
+
+```bash
+npm run import:contentful -- --space-id <your space id> --management-token <your management token>
+```
+
+This needs a **Contentful Management token**, which is different from the two
+tokens in `.env`. Those can only read. A management token can change anything
+in every space you can reach, so it is never written into `.env`, a file or
+the repo. Create one in Contentful under your account settings, CMA tokens,
+use it here, and revoke it when you are done.
+
+The import runs `contentful-import` once through `npx`, at a pinned version,
+so it is not one of the repo's dependencies.
+
+### 5. Add example content (optional)
+
+```bash
+npm run import:seed -- --space-id <your space id> --management-token <your management token>
+```
+
+This publishes three example posts, two authors, the three categories, two
+tags, an About and a Privacy page, and one of each embedded block. Between
+them they show every feature the site has, such as a table of contents, a
+numbered post, code, an image prompt and a callout. Every cover, portrait and
+body image is the same placeholder picture, `contentful/seed-assets/placeholder.jpg`,
+which Contentful fetches from this repo on GitHub when you import.
+
+The example content is written by `contentful/build-seed.mjs`, and
+`contentful/seed.json` is its output. To change the example content, edit
+the generator and run `npm run build:seed`, never the JSON by hand. A test
+fails if the two disagree.
+
+Replace or delete the example entries in Contentful once you have your own.
+
+### 6. Run it locally
+
+```bash
+npm run dev
+```
+
+The dev server, at `http://localhost:4321`, shows your published content and
+updates as you edit the code. Search does not work there, because its index
+is written at the end of a build. To try search, or anything the Worker does,
+build the site and serve the build:
+
+```bash
+npm run build
+```
+
+```bash
+npm run preview
+```
+
+### 7. Deploy to Cloudflare Workers
+
+1. **Name the Worker.** Its name is `name` in `wrangler.jsonc`, and the
+   Worker you create in Cloudflare must have the same name, or the build
+   refuses to deploy. Pick one and set both.
+2. **Connect the fork.** In Cloudflare, Workers & Pages, create a Worker by
+   importing your GitHub repository, which sets up Workers Builds. In the
+   Worker's Settings, Build, set the build command to `npm run build` and the
+   deploy command to `npx wrangler deploy`.
+3. **Add the runtime secrets.** In the Worker's Settings, Variables & Secrets,
+   add all five `CONTENTFUL_*` values as secrets. These are what the running
+   site reads, for draft previews and the purge endpoint.
+4. **Add the build variables.** In the Worker's Settings, Build, Build
+   variables and secrets, add `CONTENTFUL_SPACE_ID`, `CONTENTFUL_ACCESS_TOKEN`
+   and `SITE_URL`. These are what the build reads to fetch your content and
+   write the pages.
+5. **Open it to search engines, on production only.** Add `ALLOW_INDEXING`
+   with the value `true` as a build variable for production, never for branch
+   previews. Until then every page tells search engines to stay away. See
+   [Indexing](#indexing).
+6. **Add your domain.** In the Worker's Settings, Domains & Routes, add a
+   Custom Domain. The domain must be on Cloudflare already, as a zone in your
+   account. `wrangler.jsonc` turns the `workers.dev` address off, so until a
+   domain is added the site has no public address. See Make it yours.
+
+**Runtime secrets and build variables are separate**, and confusing them is
+the commonest failure. The build cannot read the Worker's secrets, and the
+Worker cannot read the build variables, so `CONTENTFUL_SPACE_ID` and
+`CONTENTFUL_ACCESS_TOKEN` go in both places. A build that stops with an
+error naming `CONTENTFUL_SPACE_ID` is missing a build variable. A deploy refused
+over a missing secret is missing a runtime secret. See [Secrets](#secrets),
+which also covers branch previews.
+
+### 8. Publish from Contentful
+
+Public pages are built, so a publish in Contentful shows only after the site
+rebuilds. To rebuild on every publish:
+
+1. In the Worker's Settings, Build, Deploy Hooks, create a deploy hook for
+   your production branch and copy its address. Treat the address as a
+   secret, since anyone holding it can start a build.
+2. In Contentful, Settings, Webhooks, add a webhook that sends a `POST` to
+   that address, triggered by Publish, Unpublish and Delete, for entries and
+   assets.
+
+A publish then shows on the site about a minute later. See
+[Publishing](#publishing).
+
+### 9. Instant publishing (optional)
+
+With the build variable `ROUTE_CACHE=true`, the pages that show posts are
+rendered on request and held in Cloudflare's cache, so a publish shows within
+seconds. It needs a second Contentful webhook, to `/api/purge`, carrying the
+`CONTENTFUL_WEBHOOK_SECRET` value in an `X-Webhook-Secret` header. Rendering
+a post on request can take longer than the 10 ms of CPU time the free Workers
+plan allows per request, so check your Worker's logs for CPU limit errors
+after turning it on. If they appear, the fix is the paid plan. Turning it on and off
+is in [Instant publishing](#instant-publishing).
+
+### 10. Preview drafts from Contentful
+
+In Contentful, Settings, Content preview, add preview URLs for the Post and
+Page content types, using your `CONTENTFUL_PREVIEW_SECRET`. The exact
+addresses are in [Draft previews](#draft-previews).
+
+## 🎨 Make it yours
+
+A fork inherits the original site's identity, and some of it would point your
+readers, search engines or analytics at the original. Change these before
+you deploy.
+
+- **Site address (required).** `SITE_URL` as a build variable. Without it the
+  build falls back to `https://beuseful.net`, the default in `astro.config.ts`,
+  and every canonical link, the sitemap, the feed and the social cards name
+  that site. The default is also written in a comment in `.env.example`, and
+  `scripts/audit-a11y.mjs` uses it when no address is given.
+- **Site identity (required).** In `src/lib/constants.ts`: `SITE_TITLE`,
+  `SITE_DESCRIPTION`, `HOME_TITLE`, `HOME_DESCRIPTION`, `SITE_AUTHOR` and
+  `SITE_FOOTER_BLURB`. The title also names the web manifest.
+- **Repository link.** `SITE_REPO_URL` in `src/lib/constants.ts` is the
+  footer's "Fork on GitHub" link. Point it at your fork, or remove the link
+  from `src/components/Footer.astro`.
+- **Analytics (required).** `ANALYTICS_TOKEN` in `src/lib/constants.ts` is the
+  original site's Cloudflare Web Analytics token. Cloudflare only accepts
+  page views from the hostname a token was made for, so on your domain it
+  counts nothing. Create a site in Cloudflare Web Analytics and use its
+  token, or remove the beacon from `src/layouts/Layout.astro` and the tests
+  that expect it. The beacon is only ever sent on a
+  build with `ALLOW_INDEXING=true`.
+- **Worker name and address.** `name` in `wrangler.jsonc` must match your
+  Worker's name in Cloudflare. `workers_dev` is `false` in the same file,
+  because the original site has its own domain. Without a custom domain,
+  set it to `true` so the site is reachable at its `workers.dev` address.
+- **`llms.txt`.** `public/llms.txt` is a hand-written description of the
+  original site, for AI tools, and every link in it points there. Rewrite it
+  or delete it.
+- **Redirects.** `public/_redirects` holds the original site's renamed
+  addresses. Empty it, keeping any rule you want.
+- **Strands.** The header's three chips and the strand pages are the
+  categories in `STRANDS` in `src/lib/strands.ts`, by slug: `blogging`,
+  `films` and `games-and-gadgets`. The example content creates categories
+  with those slugs. To use your own, change `STRANDS` and the matching
+  `--color-strand-*` tokens in `src/styles/global.css` together.
+- **Brand colours.** The palette is the `--color-brand-*` tokens in
+  `src/styles/global.css`, once for light and once, in the dark-mode media
+  query, for dark. `THEME_COLOR` and `THEME_COLOR_DARK` in
+  `src/lib/constants.ts` repeat the page colour for the browser's toolbar and
+  must change with `--color-brand-bg`. The social cards draw in their own
+  copies of three colours, `BRAND_BG`, `BRAND_INK` and `BRAND_CRIMSON` in
+  `src/lib/og-card.ts`.
+- **Brand images.** In `public/`: `be_useful.jpg`, the social card for every
+  page that is not a post, then `favicon.ico`, `apple-icon.png`,
+  `icon-192.png` and `icon-512.png`. Keep the file names or update
+  `src/layouts/Layout.astro`, `src/components/PostView.astro` and
+  `src/pages/manifest.webmanifest.ts`.
+- **Illustrations.** The search page's emblem, `public/search-emblem.svg`, and
+  the not-found page's gremlin, `public/404-gremlin.webp`, with its caption
+  and alt text in `src/pages/404.astro`, are made for the original site.
+  Replace or remove them.
+- **German posts (optional).** The content model ships one locale, so a fork
+  has no German pages and needs no setup. In a space without German, the
+  build's German queries come back empty, with a warning in the build log,
+  and the site carries on. To translate a post, add a `de-DE` locale to the
+  space with no fallback, then fill in the post's German title, excerpt and
+  body. Another language is more than a constant change: German words are
+  written into the code, for example in `src/components/PostView.astro` and
+  `src/components/UpdatedStamp.astro`.
+- **Security headers (careful).** All of them are in
+  `src/lib/security-headers.ts`. Two relaxations are load-bearing.
+  WebAssembly is allowed on `/search` and `/pagefind/*` only, because search
+  runs as WebAssembly in the browser, and without it search fails with no
+  visible error. Framing by Contentful is allowed on `/preview/*` only,
+  which is what lets Contentful show a draft beside the editor. Remove
+  neither, and widen neither.
+- **The placeholder image.** `PLACEHOLDER_ASSET_URL` in
+  `contentful/build-seed.mjs` fetches the picture from this repo on GitHub.
+  It works as it is. To serve it from your fork, change the address, run
+  `npm run build:seed`, and commit both files.
+- **Licence.** `LICENSE.md` names the original author. The MIT licence asks you
+  to keep that notice. Add your own name beside it for your changes.
+- **`CLAUDE.md` (optional).** The standing rules for working on the repo with
+  Claude Code. It is useful as it is, but some rules are this site's own
+  choices, such as British spelling and the strand names. Edit it to suit.
+- **This README.** The introduction and the URL parity example describe the
+  original site.
+
 ## 🛠 Working on it
 
 ### Setup
