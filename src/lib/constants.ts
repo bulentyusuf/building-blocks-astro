@@ -32,10 +32,12 @@ export const THEME_COLOR = "#FAF5F1";
 // Dark-scheme twin.
 export const THEME_COLOR_DARK = "#18181B";
 
+// The site's language: page lang, dates and tag order all follow it. A fork
+// writing American English sets "en-US" here and nowhere else.
 export const DEFAULT_LOCALE = "en-GB";
 
 // Open Graph uses an underscore.
-export const DEFAULT_OG_LOCALE = "en_GB";
+export const DEFAULT_OG_LOCALE = DEFAULT_LOCALE.replace("-", "_");
 
 // Per-post opt-in under English chrome; no fallback, so empty means untranslated.
 export const GERMAN_LOCALE = "de-DE";

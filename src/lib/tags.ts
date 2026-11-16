@@ -1,3 +1,4 @@
+import { DEFAULT_LOCALE } from "./constants";
 import { present } from "./links";
 import type { ListPost, Post, Tag } from "./types";
 
@@ -56,6 +57,6 @@ export function groupPostsByTag<
   }
 
   return [...groups.values()].sort((a, b) =>
-    a.tag.name.localeCompare(b.tag.name, "en-GB"),
+    a.tag.name.localeCompare(b.tag.name, DEFAULT_LOCALE),
   );
 }
