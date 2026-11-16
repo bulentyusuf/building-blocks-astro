@@ -101,14 +101,16 @@ and must match the `secret` in the space's preview URL.
 
 ### Commands
 
-| Command           | What it does                                    |
-| ----------------- | ----------------------------------------------- |
-| `npm run dev`     | Development server, in the Workers runtime      |
-| `npm run build`   | Type-check, then build to `dist/`               |
-| `npm run preview` | Serve the build locally, in the Workers runtime |
-| `npm test`        | Unit tests                                      |
-| `npm run check`   | Type-check only                                 |
-| `npm run format`  | Format every file with Prettier                 |
+| Command                 | What it does                                                                                                          |
+| ----------------------- | --------------------------------------------------------------------------------------------------------------------- |
+| `npm run dev`           | Development server, in the Workers runtime                                                                            |
+| `npm run build`         | Type-check, then build to `dist/`                                                                                     |
+| `npm run preview`       | Serve the build locally, in the Workers runtime                                                                       |
+| `npm test`              | Unit tests                                                                                                            |
+| `npm run check`         | Type-check only                                                                                                       |
+| `npm run format`        | Format every file with Prettier                                                                                       |
+| `npm run audit:a11y`    | Accessibility audit of a running site in a real browser, by hand: `SITE_URL=http://localhost:4321 npm run audit:a11y` |
+| `npm run measure:bloat` | Prints the repo's bloat signals, by hand, such as what ships to readers and over-long comments                        |
 
 `npm run preview` is the one to trust for anything the Worker does: it runs
 the build in the same runtime as production.
