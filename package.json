@@ -12,7 +12,9 @@
     "check": "astro check",
     "test": "vitest run",
     "format": "prettier --write .",
-    "format:check": "prettier --check ."
+    "format:check": "prettier --check .",
+    "audit:a11y": "node scripts/audit-a11y.mjs",
+    "measure:bloat": "node scripts/measure-bloat.mjs"
   },
   "dependencies": {
     "@astrojs/cloudflare": "^14.4.8",
