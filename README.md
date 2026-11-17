@@ -321,8 +321,8 @@ you deploy.
   their expected values to match.
 - **German posts (optional).** The content model ships one locale, so a fork
   has no German pages and needs no setup. In a space without German, the
-  build's German queries come back empty, with a warning in the build log,
-  and the site carries on. To translate a post, add a `de-DE` locale to the
+  build's German queries come back empty, with a one-line note in the build
+  log, and the site carries on. To translate a post, add a `de-DE` locale to the
   space with no fallback, then fill in the post's German title, excerpt and
   body. Another language is more than a constant change: German words are
   written into the code, for example in `src/components/PostView.astro` and
