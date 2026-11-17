@@ -43,7 +43,7 @@ const FILE_NAME = /(\/index)?\.html$/;
 export async function respond(
   render: () => Promise<Response>,
   url: URL,
-  { routeCache = false, allowIndexing = false } = {},
+  { routeCache = false, allowIndexing = false, analytics = false } = {},
 ): Promise<Response> {
   // The router matches /preview/posts/a/index.html to the draft page, then
   // cannot read the slug back out of it and fails with a bare 500.
@@ -68,7 +68,7 @@ export async function respond(
   // headers. Everything else stays unindexable and is stored nowhere.
   const cached = routeCache && held(url, response);
   const ours = cached
-    ? cachedPageHeaders(url.pathname, allowIndexing)
+    ? cachedPageHeaders(url.pathname, { allowIndexing, analytics })
     : onDemandHeaders(url.pathname);
   for (const [name, value] of Object.entries(ours)) {
     headers.set(name, value);
@@ -108,6 +108,7 @@ export default {
       {
         routeCache: import.meta.env.ROUTE_CACHE,
         allowIndexing: import.meta.env.ALLOW_INDEXING,
+        analytics: import.meta.env.ANALYTICS_BEACON_TOKEN !== "",
       },
     );
   },

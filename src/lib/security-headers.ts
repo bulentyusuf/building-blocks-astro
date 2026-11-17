@@ -4,7 +4,7 @@
 export const CMS_ORIGIN = "https://app.contentful.com";
 
 // The analytics beacon's script and its report endpoint. Allowed only on a
-// build that is open to indexing.
+// build with an analytics token, which `analyticsToken` ties to indexing.
 export const ANALYTICS_SCRIPT_ORIGIN = "https://static.cloudflareinsights.com";
 export const ANALYTICS_CONNECT_ORIGIN = "https://cloudflareinsights.com";
 
@@ -82,11 +82,11 @@ export function onDemandHeaders(pathname: string): Record<string, string> {
  */
 export function cachedPageHeaders(
   pathname: string,
-  allowIndexing: boolean,
+  { allowIndexing, analytics }: { allowIndexing: boolean; analytics: boolean },
 ): Record<string, string> {
   return {
     ...SECURITY_HEADERS,
-    [CSP]: contentSecurityPolicyFor(pathname, allowIndexing),
+    [CSP]: contentSecurityPolicyFor(pathname, analytics),
     ...(allowIndexing ? {} : { "X-Robots-Tag": "noindex" }),
     // The static host's own answers for a page: a browser asks again each
     // visit, and the type names the charset.
@@ -107,19 +107,21 @@ function block(pattern: string, headers: Record<string, string>): string {
  */
 export function staticHeadersFile({
   allowIndexing,
+  analytics,
 }: {
   allowIndexing: boolean;
+  analytics: boolean;
 }): string {
   const base = {
     ...SECURITY_HEADERS,
-    [CSP]: contentSecurityPolicy({ analytics: allowIndexing }),
+    [CSP]: contentSecurityPolicy({ analytics }),
     ...(allowIndexing ? {} : { "X-Robots-Tag": "noindex" }),
   };
   const relaxed = WASM_PATHS.map((pattern) =>
     [
       pattern,
       `  ! ${CSP}`,
-      `  ${CSP}: ${contentSecurityPolicy({ wasm: true, analytics: allowIndexing })}`,
+      `  ${CSP}: ${contentSecurityPolicy({ wasm: true, analytics })}`,
     ].join("\n"),
   );
   // The cards have no file extension for the host to read a type from.
@@ -132,4 +134,12 @@ export function staticHeadersFile({
 /** Only the exact word opens the site to crawlers, so a typo fails closed. */
 export function indexingAllowed(value: string | undefined): boolean {
   return value?.trim() === "true";
+}
+
+/** The analytics token a build uses: none unless indexing is open and one is set. */
+export function analyticsToken(
+  value: string | undefined,
+  allowIndexing: boolean,
+): string {
+  return allowIndexing ? (value?.trim() ?? "") : "";
 }
