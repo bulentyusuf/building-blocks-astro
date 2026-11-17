@@ -222,6 +222,13 @@ type GraphQLVariables = Record<string, unknown>;
 // `data` and `errors` can both be present.
 type GraphQLEnvelope = { data?: unknown; errors?: unknown[] };
 
+function isUnknownLocale(error: unknown): boolean {
+  return (
+    (error as { extensions?: { contentful?: { code?: string } } })?.extensions
+      ?.contentful?.code === "UNKNOWN_LOCALE"
+  );
+}
+
 // Read per call, not at import: a build reads the environment, an on-demand
 // route the Worker's secrets. Trimmed, or a pasted trailing newline would
 // reach the request URL.
@@ -310,7 +317,16 @@ async function fetchGraphQL<T>(
       if (!body.data) {
         throw new Error(`Contentful GraphQL returned errors: ${detail}`);
       }
-      console.warn(`Contentful GraphQL partial response: ${detail}`);
+      // A space without the requested locale, such as a fork with no German,
+      // answers UNKNOWN_LOCALE. Expected, so it gets a note, not a warning.
+      if (body.errors.every(isUnknownLocale)) {
+        const said = body.errors.map(
+          (e) => (e as { message?: string }).message,
+        );
+        console.info(`[contentful] ${said.join("; ")}. Building without it.`);
+      } else {
+        console.warn(`Contentful GraphQL partial response: ${detail}`);
+      }
     }
 
     return body as T;
