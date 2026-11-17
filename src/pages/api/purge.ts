@@ -9,7 +9,7 @@ export const prerender = false;
 // purges the cached pages the change reaches. With the route cache off there
 // is nothing to purge, and the address answers as if it were not here.
 export const POST: APIRoute = ({ request }) =>
-  import.meta.env.ROUTE_CACHE
+  __ROUTE_CACHE__
     ? handlePurge(request, {
         secret: getSecret("CONTENTFUL_WEBHOOK_SECRET")?.trim(),
         purge: (tags) => cache.purge({ tags }),

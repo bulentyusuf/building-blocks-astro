@@ -146,9 +146,11 @@ export default defineConfig({
   },
   vite: {
     plugins: [tailwindcss()],
+    // Bare names, not `import.meta.env.*`: Astro swaps any of those for a raw
+    // environment variable of the same name before Vite's define runs.
     define: {
-      "import.meta.env.ALLOW_INDEXING": JSON.stringify(allowIndexing),
-      "import.meta.env.ROUTE_CACHE": JSON.stringify(routeCacheEnabled),
+      __ALLOW_INDEXING__: JSON.stringify(allowIndexing),
+      __ROUTE_CACHE__: JSON.stringify(routeCacheEnabled),
     },
   },
 });
