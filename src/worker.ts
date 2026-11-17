@@ -106,9 +106,9 @@ export default {
       async () => (await handle(...args)) as Response,
       new URL(request.url),
       {
-        routeCache: import.meta.env.ROUTE_CACHE,
-        allowIndexing: import.meta.env.ALLOW_INDEXING,
-        analytics: import.meta.env.ANALYTICS_BEACON_TOKEN !== "",
+        routeCache: __ROUTE_CACHE__,
+        allowIndexing: __ALLOW_INDEXING__,
+        analytics: __ANALYTICS_TOKEN__ !== "",
       },
     );
   },

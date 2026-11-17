@@ -5,7 +5,7 @@ import { SITE_URL } from "../lib/constants";
 // keeps them off the routes the Worker answers.
 export const GET: APIRoute = () =>
   new Response(
-    import.meta.env.ALLOW_INDEXING
+    __ALLOW_INDEXING__
       ? `User-agent: *\nAllow: /\nDisallow: /api/\nDisallow: /preview/\n\nSitemap: ${SITE_URL}/sitemap.xml\n`
       : "User-agent: *\nDisallow: /\n",
     { headers: { "Content-Type": "text/plain; charset=utf-8" } },
