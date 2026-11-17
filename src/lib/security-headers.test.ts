@@ -5,6 +5,7 @@ import {
   ANALYTICS_SCRIPT_ORIGIN,
   CMS_ORIGIN,
   SECURITY_HEADERS,
+  analyticsToken,
   contentSecurityPolicy,
   contentSecurityPolicyFor,
   indexingAllowed,
@@ -108,40 +109,54 @@ describe("a page held in the route cache", () => {
 
   it("carries exactly what the static file it replaces carried", () => {
     for (const allowIndexing of [false, true]) {
-      const file = staticHeadersFile({ allowIndexing });
-      for (const path of pages) {
-        // These two the static host adds itself, outside the file.
-        const {
-          "Cache-Control": _cache,
-          "Content-Type": _type,
-          ...headers
-        } = cachedPageHeaders(path, allowIndexing);
-        expect(headers, `${path} ${allowIndexing}`).toEqual(
-          Object.fromEntries(resolveStatic(file, path)),
-        );
+      for (const analytics of [false, true]) {
+        const flags = { allowIndexing, analytics };
+        const file = staticHeadersFile(flags);
+        for (const path of pages) {
+          // These two the static host adds itself, outside the file.
+          const {
+            "Cache-Control": _cache,
+            "Content-Type": _type,
+            ...headers
+          } = cachedPageHeaders(path, flags);
+          expect(headers, `${path} ${allowIndexing} ${analytics}`).toEqual(
+            Object.fromEntries(resolveStatic(file, path)),
+          );
+        }
       }
     }
   });
 
   it("is closed to search engines unless the build is open", () => {
     for (const path of pages) {
-      expect(cachedPageHeaders(path, false)["X-Robots-Tag"], path).toBe(
-        "noindex",
-      );
-      expect("X-Robots-Tag" in cachedPageHeaders(path, true), path).toBe(false);
+      for (const analytics of [false, true]) {
+        const closed = cachedPageHeaders(path, {
+          allowIndexing: false,
+          analytics,
+        });
+        const open = cachedPageHeaders(path, {
+          allowIndexing: true,
+          analytics,
+        });
+        expect(closed["X-Robots-Tag"], path).toBe("noindex");
+        expect("X-Robots-Tag" in open, path).toBe(false);
+      }
     }
   });
 
   it("has a browser ask again on every visit, as a static page does", () => {
-    const headers = cachedPageHeaders("/", true);
+    const headers = cachedPageHeaders("/", {
+      allowIndexing: true,
+      analytics: true,
+    });
     expect(headers["Cache-Control"]).toBe("public, max-age=0, must-revalidate");
     expect(headers["Content-Type"]).toBe("text/html; charset=utf-8");
   });
 });
 
 describe("the static headers file", () => {
-  const closed = staticHeadersFile({ allowIndexing: false });
-  const open = staticHeadersFile({ allowIndexing: true });
+  const closed = staticHeadersFile({ allowIndexing: false, analytics: false });
+  const open = staticHeadersFile({ allowIndexing: true, analytics: true });
 
   it("blocks indexing on every path unless explicitly opened", () => {
     for (const path of ["/", "/posts/a", "/search", "/pagefind/x.js"]) {
@@ -187,11 +202,12 @@ describe("analytics", () => {
     (csp.split("; ").find((d) => d.startsWith(`${directive} `)) ?? "")
       .split(/\s+/)
       .filter((t) => t.startsWith("https://"));
-  const closed = staticHeadersFile({ allowIndexing: false });
-  const open = staticHeadersFile({ allowIndexing: true });
+  const closed = staticHeadersFile({ allowIndexing: false, analytics: false });
+  const open = staticHeadersFile({ allowIndexing: true, analytics: true });
+  const openBare = staticHeadersFile({ allowIndexing: true, analytics: false });
   const pages = ["/", "/posts/a", "/search", "/pagefind/x.js"];
 
-  it("are allowed by the policy only when indexing is open, and only two hosts", () => {
+  it("are allowed by the policy only with analytics on, and only two hosts", () => {
     for (const path of pages) {
       const on = resolveStatic(open, path).get(CSP) ?? "";
       expect(hosts(on, "script-src"), path).toEqual([ANALYTICS_SCRIPT_ORIGIN]);
@@ -201,6 +217,23 @@ describe("analytics", () => {
       const off = resolveStatic(closed, path).get(CSP) ?? "";
       expect(off, path).not.toContain("cloudflareinsights");
       expect(off, path).toBe(contentSecurityPolicyFor(path));
+    }
+  });
+
+  it("stay out of an open build that has no token", () => {
+    expect(openBare).not.toContain("cloudflareinsights");
+    for (const path of pages) {
+      const resolved = resolveStatic(openBare, path);
+      expect(resolved.get(CSP), path).toBe(contentSecurityPolicyFor(path));
+      expect(resolved.has("X-Robots-Tag"), path).toBe(false);
+    }
+    for (const path of ["/", "/posts/a"]) {
+      const held = cachedPageHeaders(path, {
+        allowIndexing: true,
+        analytics: false,
+      });
+      expect(JSON.stringify(held), path).not.toContain("cloudflareinsights");
+      expect("X-Robots-Tag" in held, path).toBe(false);
     }
   });
 
@@ -233,15 +266,52 @@ describe("analytics", () => {
     expect(route).toContain("prerender = false");
   });
 
-  it("render in the layout only on an open build and never on a draft", () => {
+  it("render in the layout only with a build token and never on a draft", () => {
     const layout = readFileSync("src/layouts/Layout.astro", "utf8");
     const beacons = layout.match(/beacon\.min\.js/g) ?? [];
     expect(beacons).toHaveLength(1);
     expect(layout).toMatch(
-      /import\.meta\.env\.ALLOW_INDEXING && !preview && \(\s*<script[^>]*beacon\.min\.js/,
+      /import\.meta\.env\.ANALYTICS_BEACON_TOKEN && !preview && \(\s*<script[^>]*beacon\.min\.js/,
     );
-    expect(layout).toContain("ANALYTICS_TOKEN");
-    expect(layout).not.toMatch(/deb38ac3/);
+    expect(layout).toMatch(
+      /token: import\.meta\.env\.ANALYTICS_BEACON_TOKEN\b/,
+    );
+    // Astro inlines a variable's raw value under its own name, past the gate.
+    for (const file of ["src/layouts/Layout.astro", "src/worker.ts"]) {
+      expect(readFileSync(file, "utf8"), file).not.toMatch(
+        /import\.meta\.env\.ANALYTICS_TOKEN\b/,
+      );
+    }
+  });
+
+  // A token in the code would ride along into every fork.
+  const HEX_TOKEN = /\b[0-9a-f]{32}\b/i;
+
+  it("carry no token in the code", () => {
+    for (const file of ["src/layouts/Layout.astro", "src/lib/constants.ts"]) {
+      expect(readFileSync(file, "utf8"), file).not.toMatch(HEX_TOKEN);
+    }
+    // Known-bad control: a hard-coded token must fail the check.
+    expect('ANALYTICS_TOKEN = "0123456789abcdef0123456789abcdef"').toMatch(
+      HEX_TOKEN,
+    );
+  });
+});
+
+describe("the analytics token", () => {
+  it("is the trimmed value on an open build", () => {
+    expect(analyticsToken("abc123", true)).toBe("abc123");
+    expect(analyticsToken("  abc123\n", true)).toBe("abc123");
+  });
+
+  it("is empty on an open build without one", () => {
+    for (const value of [undefined, "", "   ", "\n"]) {
+      expect(analyticsToken(value, true), String(value)).toBe("");
+    }
+  });
+
+  it("is empty on a closed build, whatever is set", () => {
+    expect(analyticsToken("abc123", false)).toBe("");
   });
 });
 

@@ -24,7 +24,7 @@ A recurring subject of the blog is the process of building and maintaining it. M
 - **[Tailwind CSS](https://tailwindcss.com)**, styling
 - **[Pagefind](https://pagefind.app)**, search index built after the site builds, running entirely in the browser
 - **[Shiki](https://shiki.style)**, syntax highlighting at build time
-- **[Cloudflare Web Analytics](https://www.cloudflare.com/web-analytics/)**, page counts, on the live site only
+- **[Cloudflare Web Analytics](https://www.cloudflare.com/web-analytics/)**, optional page counts, on the live site only
 - **TypeScript** throughout
 
 ## 🧩 Content model
@@ -131,6 +131,7 @@ Then fill in `.env`. It is ignored by git, so nothing in it is committed.
 | `CONTENTFUL_WEBHOOK_SECRET`       | Another long random string. It is only used by [instant publishing](#instant-publishing), but Cloudflare refuses a deploy without it, so set one now                            |
 | `SITE_URL`                        | Your site's address, such as `https://example.com`. Leave it empty locally. Without it in production, every canonical link, the sitemap and the feed point at the original site |
 | `ALLOW_INDEXING`                  | Leave empty locally. See step 7                                                                                                                                                 |
+| `ANALYTICS_TOKEN`                 | Optional. Leave empty. See [Indexing](#indexing)                                                                                                                                |
 | `ROUTE_CACHE`                     | Leave empty. See step 9                                                                                                                                                         |
 
 One way to make a long random string is `openssl rand -hex 32`.
@@ -213,7 +214,10 @@ npm run preview
    with the value `true` as a build variable for production, never for branch
    previews. Until then every page tells search engines to stay away. See
    [Indexing](#indexing).
-6. **Add your domain.** In the Worker's Settings, Domains & Routes, add a
+6. **Add analytics, if you want it.** To use Cloudflare Web Analytics, create
+   a site in it and add its token as the build variable `ANALYTICS_TOKEN`, for
+   production only. Without it the site sends no analytics.
+7. **Add your domain.** In the Worker's Settings, Domains & Routes, add a
    Custom Domain. The domain must be on Cloudflare already, as a zone in your
    account. `wrangler.jsonc` turns the `workers.dev` address off, so until a
    domain is added the site has no public address. See Make it yours.
@@ -261,7 +265,7 @@ addresses are in [Draft previews](#draft-previews).
 ## 🎨 Make it yours
 
 A fork inherits the original site's identity, and some of it would point your
-readers, search engines or analytics at the original. Change these before
+readers or search engines at the original. Change these before
 you deploy.
 
 - **Site address (required).** `SITE_URL` as a build variable. Without it the
@@ -275,13 +279,10 @@ you deploy.
 - **Repository link.** `SITE_REPO_URL` in `src/lib/constants.ts` is the
   footer's "Fork on GitHub" link. Point it at your fork, or remove the link
   from `src/components/Footer.astro`.
-- **Analytics (required).** `ANALYTICS_TOKEN` in `src/lib/constants.ts` is the
-  original site's Cloudflare Web Analytics token. Cloudflare only accepts
-  page views from the hostname a token was made for, so on your domain it
-  counts nothing. Create a site in Cloudflare Web Analytics and use its
-  token, or remove the beacon from `src/layouts/Layout.astro` and the tests
-  that expect it. The beacon is only ever sent on a
-  build with `ALLOW_INDEXING=true`.
+- **Analytics (optional).** The template ships with none. To use Cloudflare
+  Web Analytics, set the build variable `ANALYTICS_TOKEN`, see
+  [Indexing](#indexing). To use something else, add its script to
+  `src/layouts/Layout.astro` and its hosts to `src/lib/security-headers.ts`.
 - **Worker name and address.** `name` in `wrangler.jsonc` must match your
   Worker's name in Cloudflare. `workers_dev` is `false` in the same file,
   because the original site has its own domain. Without a custom domain,
@@ -506,10 +507,11 @@ A build is closed to search engines by default: every response carries
 `X-Robots-Tag: noindex` and `robots.txt` disallows everything. Set
 `ALLOW_INDEXING=true` on the production build only.
 
-That switch also controls analytics. An open build renders the Cloudflare Web
+Analytics needs that switch and a token. A build with `ALLOW_INDEXING=true`
+and the build variable `ANALYTICS_TOKEN` set renders the Cloudflare Web
 Analytics beacon on public pages and adds the beacon's two hosts to the
-content security policy. Closed builds, branch previews and `/preview/*`
-never carry it.
+content security policy. Without either, a build has neither. Closed builds,
+branch previews and `/preview/*` never carry it.
 
 ### Secrets
 

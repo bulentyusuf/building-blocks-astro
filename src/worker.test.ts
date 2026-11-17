@@ -165,10 +165,16 @@ describe("with the route cache on", () => {
         ...init.headers,
       },
     });
-  const on = (path: string, response: Response, allowIndexing = false) =>
+  const on = (
+    path: string,
+    response: Response,
+    allowIndexing = false,
+    analytics = allowIndexing,
+  ) =>
     respond(async () => response, new URL(`https://example.com${path}`), {
       routeCache: true,
       allowIndexing,
+      analytics,
     });
 
   it("holds a public page, with a static file's headers", async () => {
@@ -207,6 +213,14 @@ describe("with the route cache on", () => {
     expect(open.headers.has("X-Robots-Tag")).toBe(false);
     expect(open.headers.get("Content-Security-Policy")).toContain(
       "https://static.cloudflareinsights.com",
+    );
+  });
+
+  it("leaves analytics out of an open build that has no token", async () => {
+    const open = await on("/posts/a", page(), true, false);
+    expect(open.headers.has("X-Robots-Tag")).toBe(false);
+    expect(open.headers.get("Content-Security-Policy")).not.toContain(
+      "cloudflareinsights",
     );
   });
 

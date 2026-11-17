@@ -8,7 +8,11 @@ import { loadEnv } from "vite";
 import { ogCards } from "./integrations/og-cards";
 import { routeCache, routeCacheOn } from "./integrations/route-cache";
 import { searchIndex } from "./integrations/search-index";
-import { indexingAllowed, staticHeadersFile } from "./src/lib/security-headers";
+import {
+  analyticsToken,
+  indexingAllowed,
+  staticHeadersFile,
+} from "./src/lib/security-headers";
 
 const variable = "./node_modules/@fontsource-variable";
 const plexMono =
@@ -16,6 +20,7 @@ const plexMono =
 
 const env = loadEnv(process.env.NODE_ENV ?? "production", process.cwd(), "");
 const allowIndexing = indexingAllowed(env.ALLOW_INDEXING);
+const analytics = analyticsToken(env.ANALYTICS_TOKEN, allowIndexing);
 const routeCacheEnabled = routeCacheOn(env.ROUTE_CACHE);
 
 // Static files take their headers from `_headers`, which the middleware
@@ -26,7 +31,7 @@ const staticHeaders: AstroIntegration = {
     "astro:build:generated": async ({ dir }) => {
       await writeFile(
         new URL("_headers", dir),
-        staticHeadersFile({ allowIndexing }),
+        staticHeadersFile({ allowIndexing, analytics: analytics !== "" }),
       );
     },
   },
@@ -148,6 +153,7 @@ export default defineConfig({
     plugins: [tailwindcss()],
     define: {
       "import.meta.env.ALLOW_INDEXING": JSON.stringify(allowIndexing),
+      "import.meta.env.ANALYTICS_BEACON_TOKEN": JSON.stringify(analytics),
       "import.meta.env.ROUTE_CACHE": JSON.stringify(routeCacheEnabled),
     },
   },
