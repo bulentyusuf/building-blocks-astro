@@ -1,4 +1,5 @@
-import { readFileSync } from "node:fs";
+import { readdirSync, readFileSync } from "node:fs";
+import { join } from "node:path";
 import { describe, it, expect } from "vitest";
 import {
   ANALYTICS_CONNECT_ORIGIN,
@@ -271,17 +272,9 @@ describe("analytics", () => {
     const beacons = layout.match(/beacon\.min\.js/g) ?? [];
     expect(beacons).toHaveLength(1);
     expect(layout).toMatch(
-      /import\.meta\.env\.ANALYTICS_BEACON_TOKEN && !preview && \(\s*<script[^>]*beacon\.min\.js/,
+      /__ANALYTICS_TOKEN__ && !preview && \(\s*<script[^>]*beacon\.min\.js/,
     );
-    expect(layout).toMatch(
-      /token: import\.meta\.env\.ANALYTICS_BEACON_TOKEN\b/,
-    );
-    // Astro inlines a variable's raw value under its own name, past the gate.
-    for (const file of ["src/layouts/Layout.astro", "src/worker.ts"]) {
-      expect(readFileSync(file, "utf8"), file).not.toMatch(
-        /import\.meta\.env\.ANALYTICS_TOKEN\b/,
-      );
-    }
+    expect(layout).toMatch(/token: __ANALYTICS_TOKEN__\b/);
   });
 
   // A token in the code would ride along into every fork.
@@ -321,5 +314,37 @@ describe("the indexing flag", () => {
     for (const value of [undefined, "", "1", "yes", "TRUE", "false"]) {
       expect(indexingAllowed(value), String(value)).toBe(false);
     }
+  });
+});
+
+// Astro replaces `import.meta.env.<NAME>` with any environment variable of
+// that name, raw, before Vite's define runs: `ALLOW_INDEXING=false` would
+// read as the truthy string "false". The flags are bare defines instead.
+describe("the build flags", () => {
+  const flagRead =
+    /import\.meta\.env\.(ALLOW_INDEXING|ROUTE_CACHE|ANALYTICS_(BEACON_)?TOKEN)\b/;
+  const envDefine = /define:\s*\{[^}]*import\.meta\.env\./;
+
+  function sources(dir: string): string[] {
+    return readdirSync(dir, { recursive: true, encoding: "utf8" })
+      .filter((file) => /\.(ts|astro|mjs)$/.test(file))
+      .map((file) => join(dir, file));
+  }
+
+  it("are never read through import.meta.env", () => {
+    for (const file of [...sources("src"), ...sources("integrations")]) {
+      expect(readFileSync(file, "utf8"), file).not.toMatch(flagRead);
+    }
+    expect(`{${"import.meta.env."}ROUTE_CACHE && x}`).toMatch(flagRead);
+    expect(`{${"import.meta.env."}ANALYTICS_TOKEN}`).toMatch(flagRead);
+  });
+
+  it("are not defined under import.meta.env", () => {
+    const config = readFileSync("astro.config.ts", "utf8");
+    expect(config).toMatch(/__ALLOW_INDEXING__:/);
+    expect(config).toMatch(/__ROUTE_CACHE__:/);
+    expect(config).toMatch(/__ANALYTICS_TOKEN__:/);
+    expect(config).not.toMatch(envDefine);
+    expect(`define: {\n  "${"import.meta.env."}X": "1",\n}`).toMatch(envDefine);
   });
 });
