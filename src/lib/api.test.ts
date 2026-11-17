@@ -174,6 +174,39 @@ describe("fetchGraphQL", () => {
     expect(warn).toHaveBeenCalledOnce();
   });
 
+  it("notes rather than warns when the space lacks a requested locale", async () => {
+    const warn = vi.spyOn(console, "warn").mockImplementation(() => {});
+    const info = vi.spyOn(console, "info").mockImplementation(() => {});
+    const unknownLocale = {
+      message: "Requested locale 'de-DE' does not exist in the space",
+      extensions: { contentful: { code: "UNKNOWN_LOCALE" } },
+    };
+    vi.stubGlobal(
+      "fetch",
+      vi.fn().mockResolvedValue(ok({ ...AUTHORS, errors: [unknownLocale] })),
+    );
+
+    await expect(getAllAuthors(false)).resolves.toHaveLength(1);
+    expect(warn).not.toHaveBeenCalled();
+    expect(info).toHaveBeenCalledOnce();
+  });
+
+  it("still warns when an unknown locale comes with another error", async () => {
+    const warn = vi.spyOn(console, "warn").mockImplementation(() => {});
+    vi.spyOn(console, "info").mockImplementation(() => {});
+    const errors = [
+      { extensions: { contentful: { code: "UNKNOWN_LOCALE" } } },
+      { message: "UNRESOLVABLE_LINK" },
+    ];
+    vi.stubGlobal(
+      "fetch",
+      vi.fn().mockResolvedValue(ok({ ...AUTHORS, errors })),
+    );
+
+    await expect(getAllAuthors(false)).resolves.toHaveLength(1);
+    expect(warn).toHaveBeenCalledOnce();
+  });
+
   it("retries an unparseable 200 and succeeds on the next attempt", async () => {
     const fetchMock = vi
       .fn()
