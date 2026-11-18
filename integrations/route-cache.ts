@@ -10,7 +10,6 @@ export const ON_DEMAND_PAGES = [
   "src/pages/archive.astro",
   "src/pages/posts/[slug].astro",
   "src/pages/de/posts/[slug].astro",
-  "src/pages/tags/index.astro",
   "src/pages/tags/[slug].astro",
   "src/pages/categories/[slug].astro",
   "src/pages/authors/[slug].astro",

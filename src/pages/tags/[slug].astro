@@ -46,11 +46,6 @@ const otherTags = new Set([...visible].filter((s) => s !== slug));
   social={{ title: `${tag.name} | ${SITE_TITLE}`, shortTitle: tag.name }}
 >
   <CollectionPage
-    crumbs={[
-      { label: "Home", href: "/" },
-      { label: "Tags", href: "/tags" },
-      { label: tag.name },
-    ]}
     posts={posts}
     visibleTags={otherTags}
     germanSlugs={new Set(germanSlugs)}

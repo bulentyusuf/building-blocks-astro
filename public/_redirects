@@ -13,6 +13,9 @@
 /categories / 308
 /authors /about 308
 
+# The tag list lives on search, so the index went too.
+/tags /search 308
+
 # Tags never repeat a strand, so these two retired into theirs.
 /tags/film /categories/films 308
 /tags/blogging /categories/blogging 308

@@ -53,10 +53,9 @@ A recurring subject of the blog is the process of building and maintaining it. M
 - A header of strand chips, one per category, that marks where the reader is. On phones they become one row that scrolls sideways, and the other links move into a menu
 - A home page with the latest post as a feature card, five more as cards and a link to the archive. No pagination anywhere
 - Category, tag and author landing pages that show every post: the latest six as cards, the rest as compact rows. There is no index page for categories or authors, and those URLs redirect
-- A tag index with a post count per topic, each linking to its tag page. Tag pills on each post and on the feature card
+- A page for every tag two or more posts share, all listed on the search page. Tag pills on each post and on the feature card
 - Archive page listing every post grouped by year
 - Related posts scored on shared tags weighted by rarity, so an uncommon tag counts for more than a common one, with category and shared authorship as lesser signals
-- Breadcrumb trails with `BreadcrumbList` structured data on tag and author pages, the archive, tags and search pages, and About and Privacy
 
 **Reading**
 
@@ -420,7 +419,7 @@ cache. A publish does two things at once:
 | Shows within seconds                                      | Follows with the rebuild                   |
 | --------------------------------------------------------- | ------------------------------------------ |
 | A new, edited or unpublished post, both languages         | The post in search results                 |
-| Home, the archive, the tag index                          | The post in `feed.xml` and `sitemap.xml`   |
+| Home and the archive                                      | The post in `feed.xml` and `sitemap.xml`   |
 | The post's strand, tag and author pages                   | A new post's social card                   |
 | Every page showing an edited strand, tag, author or image | About and Privacy                          |
 |                                                           | Related posts and tag pills on other posts |

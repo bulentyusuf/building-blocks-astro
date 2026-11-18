@@ -68,7 +68,6 @@ export function sitemapXml({
 
   const entries: Entry[] = [
     { url: SITE_URL, lastModified: newestSitewide },
-    { url: `${SITE_URL}/tags`, lastModified: newestSitewide },
     { url: `${SITE_URL}/archive`, lastModified: newestSitewide },
     ...pages
       .filter((page) => ROUTED_PAGE_SLUGS.has(page.slug))

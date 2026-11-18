@@ -1,5 +1,4 @@
 ---
-import Breadcrumb from "./Breadcrumb.astro";
 import UpdatedStamp from "./UpdatedStamp.astro";
 import Layout from "../layouts/Layout.astro";
 import { getPage } from "../lib/api";
@@ -34,9 +33,6 @@ const title = `${page.title} | ${SITE_TITLE}`;
 >
   <div class="max-w-frame mx-auto px-4 md:px-10 pt-8 pb-12">
     <div class="mx-auto max-w-[49.25rem]">
-      <Breadcrumb
-        items={[{ label: "Home", href: "/" }, { label: page.title }]}
-      />
       <h1 class="text-5xl leading-[0.98] font-[800] tracking-[-0.03em] md:text-6xl lg:text-7xl">
         {page.title}
       </h1>

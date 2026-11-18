@@ -101,13 +101,13 @@ describe("a strand page", () => {
 
 describe("tag and author pages", () => {
   it.each([
-    ["tags/[slug].astro", "Home›Tags›Design", "#Design", 8],
-    ["authors/[slug].astro", "Home›Bulent Yusuf", "Bulent Yusuf", 9],
+    ["tags/[slug].astro", "#Design", 8],
+    ["authors/[slug].astro", "Bulent Yusuf", 9],
   ])(
-    "%s lists every post under a trail and one visible h1",
-    async (file, trail, heading, posts) => {
+    "%s lists every post under one visible h1, with no trail",
+    async (file, heading, posts) => {
       const page = await on(file, (p) => p.evaluate(listing));
-      expect(page.trail).toBe(trail);
+      expect(page.trail).toBe("");
       expect(page.h1.map((h) => h.visible)).toEqual([true]);
       expect(page.h1[0].text).toBe(heading);
       expect(page.cards + page.rows).toBe(posts);
@@ -135,8 +135,8 @@ describe("the archive", () => {
 });
 
 describe("a wide page", () => {
-  it.each(["archive.astro", "tags/index.astro", "search.astro"])(
-    "%s has a trail and a header holding the heading alone",
+  it.each(["archive.astro", "search.astro"])(
+    "%s has no trail and a header holding the heading alone",
     async (file) => {
       const header = await on(file, (page) =>
         page.evaluate(() => {
@@ -151,29 +151,33 @@ describe("a wide page", () => {
           };
         }),
       );
-      expect(header).toEqual({ children: ["H1"], trail: true, border: "0px" });
+      expect(header).toEqual({ children: ["H1"], trail: false, border: "0px" });
     },
   );
 });
 
 describe("a narrow page", () => {
   it.each(["about.astro", "privacy.astro"])(
-    "%s sets trail, heading and text in one centred 49.25rem column",
+    "%s sets heading and text in one centred 49.25rem column, with no trail",
     async (file) => {
       const column = await on(file, (page) =>
         page.evaluate(() => {
           const box = (selector: string) =>
             document.querySelector(`main ${selector}`)!.getBoundingClientRect();
-          const [trail, h1, article] = ["nav", "h1", "article"].map(box);
+          const [h1, article] = ["h1", "article"].map(box);
           return {
+            trail: !!document.querySelector(
+              'main nav[aria-label="Breadcrumb"]',
+            ),
             width: article.width,
-            lefts: [trail.left, h1.left, article.left],
+            lefts: [h1.left, article.left],
             centred: Math.abs(
               article.left + article.width / 2 - window.innerWidth / 2,
             ),
           };
         }),
       );
+      expect(column.trail).toBe(false);
       expect(column.width).toBe(49.25 * 16);
       expect(new Set(column.lefts).size).toBe(1);
       // Within the scrollbar's width of the middle.
@@ -471,11 +475,7 @@ describe("Pagefind's script and styles", () => {
       "https://beuseful.net/pagefind/pagefind-component-ui.css",
       "https://beuseful.net/pagefind/pagefind-component-ui.js",
     ]);
-    for (const file of [
-      "index.astro",
-      "posts/[slug].astro",
-      "tags/index.astro",
-    ]) {
+    for (const file of ["index.astro", "posts/[slug].astro", "archive.astro"]) {
       expect(await asked(file), file).toEqual([]);
     }
   });
