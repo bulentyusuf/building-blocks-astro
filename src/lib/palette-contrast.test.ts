@@ -64,11 +64,12 @@ describe.each(SCHEMES)("in the %s scheme", (scheme) => {
     );
   });
 
-  it("the crimson of links and labels clears AAA on the page", () => {
+  it("the crimson of links and labels clears AAA on the page and on a card", () => {
     // The dark value is a hand-carried lift, not derived from the light one.
     expect(on("--color-brand-crimson", "--color-brand-bg")).toBeGreaterThan(
       AAA,
     );
+    expect(on("--color-brand-crimson", "--color-card")).toBeGreaterThan(AAA);
   });
 
   it("body ink clears AAA on the page and on a card", () => {
@@ -148,7 +149,7 @@ describe("colours written out as literals track their tokens", () => {
   it("would catch the dark crimson wired into the emblem", () => {
     const wrong = emblem.replace(
       /(id="search-emblem-ink"[^>]*fill=")#[0-9a-f]{6}/i,
-      "$1#F28A9B",
+      "$1#F594A4",
     );
     expect(fill(wrong, "search-emblem-ink")).not.toEqual(
       token("--color-brand-crimson", "light"),
@@ -156,6 +157,16 @@ describe("colours written out as literals track their tokens", () => {
     expect(fill(wrong, "search-emblem-ink")).toEqual(
       token("--color-brand-crimson", "dark"),
     );
+  });
+
+  it("the focus ring on an ink block is the dark crimson", () => {
+    // The block stays ink in the light scheme, where the token is too dark.
+    const ring =
+      /\.bg-surface-dark :focus-visible\s*\{\s*outline-color:\s*(#[0-9a-f]{6})/i.exec(
+        read("src/styles/global.css"),
+      );
+    expect(ring).not.toBeNull();
+    expect(parse(ring![1])).toEqual(token("--color-brand-crimson", "dark"));
   });
 
   it("the search emblem carries no colour-scheme query", () => {

@@ -87,6 +87,8 @@
         if (showing === image) view.srcset = image.srcset;
       });
       frame.style.width = enlargedWidth(width, height);
+      // A German page's figure carries its own language; the dialog does not.
+      frame.lang = image.closest("figure")?.lang ?? "";
       caption.textContent = text;
       caption.hidden = !text;
       // Named by its caption, else by what the picture shows.
@@ -137,7 +139,13 @@
           button.addEventListener("click", () => open(image));
           image.before(button);
           button.append(image);
-        } else if (!worth && offered && !dialog!.open) {
+        } else if (
+          !worth &&
+          offered &&
+          !dialog!.open &&
+          // Kept while focused, or the focus a closing dialog returned is lost.
+          document.activeElement !== image.parentElement
+        ) {
           image.parentElement.replaceWith(image);
         }
       }

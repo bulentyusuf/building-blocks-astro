@@ -101,7 +101,8 @@ const jsonLd = {
     </div>
     {author.bio && (
       <div
-        class="mt-6 max-w-2xl text-lg leading-relaxed text-pretty text-brand-muted"
+        data-bio
+        class="mt-6 max-w-2xl text-lg leading-relaxed text-pretty text-brand-muted [&_a]:font-medium [&_a]:text-brand-crimson [&_a]:underline [&_p+p]:mt-3"
         set:html={renderRichText({ content: author.bio, headings: [] })}
       />
     )}
