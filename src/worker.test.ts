@@ -125,6 +125,33 @@ describe("a redirect from the Worker", () => {
   });
 });
 
+describe("a redirect address starting with two slashes", () => {
+  const site = "https://beuseful.net";
+
+  it("stays on the site, from the Worker and the framework alike", async () => {
+    for (const path of ["//evil.example/index.html", "//evil.example.html"]) {
+      const response = await respond(
+        async () => new Response("rendered"),
+        new URL(`${site}${path}`),
+        { routeCache: true },
+      );
+      expect(response.status, path).toBe(307);
+      expect(response.headers.get("Location"), path).toBe("/evil.example");
+    }
+    const made = new Response(null, {
+      status: 301,
+      headers: { Location: "//evil.example" },
+    });
+    const response = await send("//evil.example/", made);
+    expect(response.headers.get("Location")).toBe("/evil.example");
+    expect(new URL("/evil.example", site).host).toBe("beuseful.net");
+  });
+
+  it("is the known-bad control: a browser reads //host as another site", () => {
+    expect(new URL("//evil.example", site).host).toBe("evil.example");
+  });
+});
+
 describe("a draft address ending in /index.html", () => {
   it("is not found, and never reaches the framework or Contentful", async () => {
     for (const path of [
