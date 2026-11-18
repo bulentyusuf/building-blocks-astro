@@ -22,6 +22,18 @@ export function contentfulSrc(src: string, width: number): string {
   return `${absolute}?w=${width}&q=75&fm=webp`;
 }
 
+/** A square JPEG cut from a Contentful image, for a link preview, which may
+ *  not read WebP. Another host's URL passes through untouched. */
+export function squareJpeg(src: string, size: number): string {
+  const absolute = src.startsWith("//") ? `https:${src}` : src;
+  try {
+    if (new URL(absolute).hostname !== CONTENTFUL_IMAGE_HOST) return src;
+  } catch {
+    return src;
+  }
+  return `${absolute}?w=${size}&h=${size}&fit=fill&f=face&fm=jpg&q=80`;
+}
+
 export interface ImageSource {
   src: string;
   srcset: string;

@@ -2,6 +2,7 @@ import fs from "node:fs";
 import { afterAll, beforeAll, describe, expect, it, vi } from "vitest";
 import type { Browser, Page } from "playwright-core";
 import { GERMAN_SLUGS, POSTS } from "./fixtures";
+import { PAGE_IDS } from "../lib/headings";
 import { launch, open, renderRoute, type OpenOptions } from "./site";
 
 // What each page shape holds, read from the rendered page in a real browser:
@@ -531,5 +532,71 @@ describe("fonts", () => {
     expect(
       beyondLatin("literata-latin-ext-opsz-normal.woff2 literata.woff2"),
     ).toEqual(["literata-latin-ext-opsz-normal.woff2", "literata.woff2"]);
+  });
+});
+
+describe("a post page's own ids", () => {
+  // Read from the page so PAGE_IDS cannot fall behind a new id. A callout's
+  // id carries a Contentful entry id, which no heading slug can match.
+  const own = (html: string) =>
+    [...html.matchAll(/<(\w+)\b[^>]*\sid="([^"]+)"/g)]
+      .filter(([, tag, id]) => tag !== "h2" && !id.startsWith("callout-"))
+      .map(([, , id]) => id);
+
+  it.each(["posts/[slug].astro", "de/posts/[slug].astro"])(
+    "are all reserved from heading slugs, on %s",
+    async (file) => {
+      const ids = own(await renderRoute(file));
+      expect(ids.length).toBeGreaterThan(1);
+      expect(ids.filter((id) => !PAGE_IDS.includes(id))).toEqual([]);
+    },
+  );
+
+  it("would catch an id missing from the list", () => {
+    const html = '<main id="main"></main><nav id="toc"></nav>';
+    expect(own(html).filter((id) => !PAGE_IDS.includes(id))).toEqual(["toc"]);
+  });
+});
+
+describe("a page's link preview", () => {
+  const meta = (html: string, key: string) =>
+    new RegExp(`<meta (?:property|name)="${key}" content="([^"]*)"`)
+      .exec(html)?.[1]
+      ?.replaceAll("&amp;", "&");
+  const preview = (html: string) => ({
+    image: meta(html, "og:image"),
+    alt: meta(html, "og:image:alt"),
+    width: meta(html, "og:image:width"),
+    height: meta(html, "og:image:height"),
+    card: meta(html, "twitter:card"),
+  });
+
+  it.each([
+    "index.astro",
+    "posts/[slug].astro",
+    "de/posts/[slug].astro",
+    "authors/[slug].astro",
+    "about.astro",
+  ])("names its picture, with its size, on %s", async (file) => {
+    const card = preview(await renderRoute(file));
+    expect(card.image).toMatch(/^https:\/\//);
+    expect(card.alt).toBeTruthy();
+    expect(Number(card.width)).toBeGreaterThan(0);
+    expect(Number(card.height)).toBeGreaterThan(0);
+  });
+
+  it("shows an author's portrait as a small square card, resized", async () => {
+    const card = preview(await renderRoute("authors/[slug].astro"));
+    expect(card).toMatchObject({
+      card: "summary",
+      width: "600",
+      height: "600",
+    });
+    expect(card.image).toContain("w=600&h=600");
+  });
+
+  it("would catch a picture with no alt text", () => {
+    const bare = '<meta property="og:image" content="https://a.example/x.jpg">';
+    expect(preview(bare).alt).toBeUndefined();
   });
 });

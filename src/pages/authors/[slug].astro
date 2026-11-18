@@ -11,6 +11,7 @@ import {
 import { postsByAuthor } from "../../lib/authors";
 import { listingPageTags } from "../../lib/cache-tags";
 import { SITE_TITLE, SITE_URL } from "../../lib/constants";
+import { squareJpeg } from "../../lib/image";
 import { renderRichText } from "../../lib/rich-text";
 import { hold, missing } from "../../lib/route-cache";
 import { visibleTagSlugs } from "../../lib/tags";
@@ -22,6 +23,9 @@ export async function getStaticPaths() {
     .filter((author) => author.slug)
     .map((author) => ({ params: { slug: author.slug } }));
 }
+
+// A link preview's portrait, in px: past the small card's 144px minimum.
+const PORTRAIT_CARD = 600;
 
 const slug = Astro.params.slug!;
 // Filtered in memory: Contentful cannot filter on a list of links.
@@ -62,7 +66,14 @@ const jsonLd = {
   social={{
     title: `${author.name} | ${SITE_TITLE}`,
     shortTitle: author.name,
-    image: author.picture?.url,
+    image: author.picture?.url
+      ? {
+          url: squareJpeg(author.picture.url, PORTRAIT_CARD),
+          alt: `Portrait of ${author.name}`,
+          width: PORTRAIT_CARD,
+          height: PORTRAIT_CARD,
+        }
+      : undefined,
   }}
 >
   <!-- No authors index to point at, so the trail is two steps. -->

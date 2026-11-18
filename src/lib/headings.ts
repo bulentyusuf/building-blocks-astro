@@ -59,15 +59,27 @@ function nodeText(node: Node): string {
     .join("");
 }
 
-// Appends -1, -2 on repeats. The ToC and the renderer each drive their own
-// instance in the same document order, so the Nth heading matches.
+/** Ids a post page gives its own elements, which no heading may take. */
+export const PAGE_IDS = [
+  "main",
+  "lightbox",
+  "lightbox-caption",
+  "cover-prompt",
+];
+
+// Appends -1, -2 on repeats, skipping any id already taken, so "Setup 1"
+// after two "Setup"s cannot collide. The renderer reads these slugs.
 function createSlugger() {
-  const seen = new Map<string, number>();
+  const taken = new Set(PAGE_IDS);
+  const next = new Map<string, number>();
   return function nextSlug(text: string): string {
     const base = slugify(text) || "section";
-    const count = seen.get(base) ?? 0;
-    seen.set(base, count + 1);
-    return count === 0 ? base : `${base}-${count}`;
+    let count = next.get(base) ?? 0;
+    let slug = count === 0 ? base : `${base}-${count}`;
+    while (taken.has(slug)) slug = `${base}-${++count}`;
+    next.set(base, count + 1);
+    taken.add(slug);
+    return slug;
   };
 }
 

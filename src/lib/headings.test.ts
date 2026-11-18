@@ -1,7 +1,12 @@
 import { describe, it, expect } from "vitest";
 import { BLOCKS } from "@contentful/rich-text-types";
 import type { Document } from "@contentful/rich-text-types";
-import { extractHeadings, hasTableOfContents, MIN_HEADINGS } from "./headings";
+import {
+  extractHeadings,
+  hasTableOfContents,
+  MIN_HEADINGS,
+  PAGE_IDS,
+} from "./headings";
 
 // Minimal rich-text node builders, matching the fixture shape in
 // rich-text.test.ts.
@@ -63,6 +68,27 @@ describe("extractHeadings slugging", () => {
     expect(
       slugsOf(heading2(text("1. Doom")), heading2(text("2. Doom"))),
     ).toEqual(["doom", "doom-1"]);
+  });
+
+  it("never repeats a slug, even against a suffix it made itself", () => {
+    expect(
+      slugsOf(
+        heading2(text("Setup")),
+        heading2(text("Setup")),
+        heading2(text("Setup 1")),
+      ),
+    ).toEqual(["setup", "setup-1", "setup-1-1"]);
+  });
+
+  it("never takes an id the page gives its own elements", () => {
+    const slugs = slugsOf(
+      heading2(text("Main")),
+      heading2(text("Lightbox")),
+      heading2(text("Cover prompt")),
+    );
+    expect(slugs).toEqual(["main-1", "lightbox-1", "cover-prompt-1"]);
+    // Known-bad control: the bare slug is the page's own id.
+    expect(PAGE_IDS).toContain("main");
   });
 
   it("folds diacritics to ASCII", () => {
