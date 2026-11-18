@@ -5,16 +5,22 @@ import { launch, open, ROUTES, type OpenOptions } from "./site";
 // Every standalone control answers a tap anywhere in a 44px square centred
 // on it, on a touch screen, and keeps its own size with a mouse. Measured by
 // tapping the square's four edges on every page. A link inside a sentence is
-// exempt: there the line of text is the target.
+// exempt: there the line of text is the target. The footer's peeking heads
+// are held to 24px, the cropped look being the point.
 
 vi.mock("../lib/api", async () => (await import("./fixtures")).api);
 
 const TAP = 44;
+const PEEK_TAP = 24;
 // Inside the square's edge, so a pixel of rounding is not a failure.
 const REACH = TAP / 2 - 1;
+const PEEK_REACH = PEEK_TAP / 2 - 1;
 
 // Runs in the page. The controls whose square lands on something else.
-function probeInPage(reach: number): { probed: number; misses: string[] } {
+function probeInPage([full, peek]: [number, number]): {
+  probed: number;
+  misses: string[];
+} {
   let probed = 0;
   // Open what is closed, so the controls inside are on screen to tap. The
   // phone menu's scrim covers the page, so it is tapped last, on its own.
@@ -57,9 +63,13 @@ function probeInPage(reach: number): { probed: number; misses: string[] } {
       probed++;
       // elementFromPoint sees only the viewport, so bring the control into it.
       el.scrollIntoView({ block: "center", inline: "center" });
+      // A peeking head is tapped where it shows: the part above the crop.
+      const row = el.closest("[data-peek]")?.getBoundingClientRect();
+      const reach = row ? peek : full;
       const r = el.getClientRects()[0];
+      const bottom = row ? Math.min(r.bottom, row.bottom) : r.bottom;
       const cx = r.left + r.width / 2;
-      const cy = r.top + r.height / 2;
+      const cy = (r.top + bottom) / 2;
       const points: [string, number, number][] = [
         ["top", cx, cy - reach],
         ["bottom", cx, cy + reach],
@@ -90,10 +100,17 @@ afterAll(async () => {
   await browser?.close();
 });
 
-async function misses(file: string, options: OpenOptions): Promise<string[]> {
+async function misses(
+  file: string,
+  options: OpenOptions,
+  peekReach = PEEK_REACH,
+): Promise<string[]> {
   const { page, context } = await open(browser, file, options);
   try {
-    const { probed, misses } = await page.evaluate(probeInPage, REACH);
+    const { probed, misses } = await page.evaluate(probeInPage, [
+      REACH,
+      peekReach,
+    ] as [number, number]);
     // Every page has at least its header and footer to tap.
     expect(probed, "the sweep found too few controls").toBeGreaterThan(12);
     return misses;
@@ -130,6 +147,12 @@ describe("the probe can fail", () => {
     // probe tells a small target from a big one.
     const found = await misses("archive.astro", { width: 1280 });
     expect(found.some((miss) => miss.includes("Auf Deutsch lesen"))).toBe(true);
+  }, 60_000);
+
+  it("finds a peeking head short of 44px, which is why it is held to 24", async () => {
+    // Known-bad control for the exception: held to 44px, the heads fail.
+    const found = await misses("index.astro", PHONE, REACH);
+    expect(found.some((miss) => miss.includes("Posts by"))).toBe(true);
   }, 60_000);
 
   it("finds them on a touch screen once the tap area is switched off", async () => {

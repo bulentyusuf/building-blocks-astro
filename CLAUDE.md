@@ -167,7 +167,8 @@ can. No UI framework ships to the browser.
 - **A scroll region's accessible name is its position** (`Table 2`, `Code
 block 2`), or a code block's filename.
 - **Standalone controls are 44px to tap on a touch screen.** A mouse keeps
-  24px. Links inside a sentence are exempt.
+  24px. Links inside a sentence are exempt, and the footer's peeking heads
+  are held to 24px, since cropping them is the design.
 - **The skip link's target, `<main id="main">`, carries `tabindex="-1"`.**
 - **A control that needs a script is revealed by that script.** With scripts
   off there is no copy or enlarge button that does nothing.

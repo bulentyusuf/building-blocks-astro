@@ -22,6 +22,7 @@ const PHONE = { width: 375, height: 800, reducedMotion: true };
 // cannot scroll into view: a row that scrolls sideways reveals its chips.
 function clippedRings([selector, checked]: [string, string[]]): string[] {
   const found: string[] = [];
+  if (!document.querySelector(selector)) return [`nothing matches ${selector}`];
   for (const el of document.querySelectorAll<HTMLElement>(selector)) {
     el.focus();
     const style = getComputedStyle(el);
@@ -80,6 +81,16 @@ describe("a focus ring", () => {
       await rings("categories/[slug].astro", "[data-strands] a", [
         "top",
         "bottom",
+      ]),
+    ).toEqual([]);
+  }, 30_000);
+
+  it("shows whole on the footer's writers, above and beside", async () => {
+    // The row crops the heads at the footer's rule, so the bottom is not checked.
+    expect(
+      await rings("index.astro", 'nav[aria-label="Writers"] a', [
+        "top",
+        "left",
       ]),
     ).toEqual([]);
   }, 30_000);
