@@ -82,7 +82,8 @@ export async function respond(
   // redirect would hand a preview link's secret back, in its body too.
   const location = headers.get("Location");
   if (location) {
-    headers.set("Location", location.split("?")[0]);
+    // A browser reads //host as another site, so leading slashes collapse.
+    headers.set("Location", location.split("?")[0].replace(/^[/\\]+/, "/"));
     headers.delete("Content-Type");
     return new Response(null, { status: response.status, headers });
   }
