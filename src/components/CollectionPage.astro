@@ -1,14 +1,12 @@
 ---
-import Breadcrumb, { type Crumb } from "./Breadcrumb.astro";
 import PostStream from "./PostStream.astro";
 import { jsonLdHtml } from "../lib/json-ld";
 import type { ListPost } from "../lib/types";
 
-// A tag or author page: a strand page with a trail and a visible h1, since no
-// chip names it. Every post, as cards then rows, no pager, no description.
+// A tag or author page: a strand page with a visible h1, since no chip names
+// it. Every post, as cards then rows, no pager, no description.
 // The default slot is the heading.
 interface Props {
-  crumbs: Crumb[];
   posts: ListPost[];
   /** Tag slugs with a live page. */
   visibleTags: Set<string>;
@@ -17,15 +15,13 @@ interface Props {
   closing: string;
   jsonLd?: unknown;
 }
-const { crumbs, posts, visibleTags, germanSlugs, closing, jsonLd } =
-  Astro.props;
+const { posts, visibleTags, germanSlugs, closing, jsonLd } = Astro.props;
 ---
 
 <div class="mx-auto max-w-frame px-4 md:px-10 pt-8 pb-16">
   {jsonLd !== undefined && (
     <script type="application/ld+json" set:html={jsonLdHtml(jsonLd)} />
   )}
-  <Breadcrumb items={crumbs} />
   <header class="mb-10">
     <slot />
   </header>

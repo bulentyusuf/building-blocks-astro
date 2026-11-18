@@ -103,11 +103,13 @@ can. No UI framework ships to the browser.
 ## Page shapes
 
 - **A route is wide or narrow, decided by its header.** Wide (`/archive`,
-  `/tags`, `/search`) renders through `WidePage.astro`. Narrow (`/about`,
-  `/privacy`) is one centred 49.25rem column, through `ContentPage.astro`.
-- **Home and the strand pages are neither**: cards under the header's chips,
-  an `sr-only` `h1`, no trail. Tag and author pages add a trail and a visible
-  `h1`, through `CollectionPage.astro`.
+  `/search`) renders through `WidePage.astro`. Narrow (`/about`, `/privacy`)
+  is one centred 49.25rem column, through `ContentPage.astro`.
+- **Home and the strand pages are neither**: cards under the header's chips
+  and an `sr-only` `h1`. Tag and author pages add a visible `h1`, through
+  `CollectionPage.astro`.
+- **No page carries a breadcrumb trail.** The site is one step deep, so a
+  trail only repeats the logo. There is no `/tags` index: search lists the tags.
 - **No page draws a rule under its header or carries a standfirst.**
 
 ## Data and Contentful

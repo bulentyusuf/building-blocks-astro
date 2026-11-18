@@ -76,9 +76,7 @@ const jsonLd = {
       : undefined,
   }}
 >
-  <!-- No authors index to point at, so the trail is two steps. -->
   <CollectionPage
-    crumbs={[{ label: "Home", href: "/" }, { label: author.name }]}
     posts={posts}
     visibleTags={visibleTagSlugs(allPosts)}
     germanSlugs={new Set(germanSlugs)}

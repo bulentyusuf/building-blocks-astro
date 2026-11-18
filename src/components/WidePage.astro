@@ -1,17 +1,13 @@
 ---
-import Breadcrumb, { type Crumb } from "./Breadcrumb.astro";
-
-// The shell every wide route renders through: breadcrumb, heading, then the
-// page. No standfirst and no rule under the header.
+// The shell every wide route renders through: heading, then the page. No
+// trail, no standfirst and no rule under the header.
 interface Props {
-  crumbs: Crumb[];
   heading: string;
 }
-const { crumbs, heading } = Astro.props;
+const { heading } = Astro.props;
 ---
 
 <div class="max-w-frame mx-auto px-4 md:px-10 pt-8 pb-12">
-  <Breadcrumb items={crumbs} />
   <header class="mb-12">
     <h1 class="text-5xl leading-[0.98] font-[800] tracking-[-0.03em] md:text-6xl lg:text-7xl">
       {heading}

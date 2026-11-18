@@ -28,7 +28,6 @@ export const ROUTES: Record<string, { path: string; slug?: string }> = {
   "privacy.astro": { path: "/privacy" },
   "archive.astro": { path: "/archive" },
   "search.astro": { path: "/search" },
-  "tags/index.astro": { path: "/tags" },
   "tags/[slug].astro": { path: "/tags/design", slug: "design" },
   "authors/[slug].astro": {
     path: "/authors/bulent-yusuf",

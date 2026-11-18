@@ -33,10 +33,7 @@ const title = `Archive | ${SITE_TITLE}`;
   canonical={`${SITE_URL}/archive`}
   social={{ title }}
 >
-  <WidePage
-    crumbs={[{ label: "Home", href: "/" }, { label: "Archive" }]}
-    heading="Archive"
-  >
+  <WidePage heading="Archive">
     {years.length === 0 ? (
       <p class="text-lg text-brand-muted">No posts yet.</p>
     ) : (

@@ -430,12 +430,12 @@ function rhythmInPage() {
 
 describe("the listing rhythm", () => {
   it.each([375, 1280])(
-    "puts the archive and the tags index the same distance below their header, at %ipx",
+    "puts the archive and search the same distance below their header, at %ipx",
     async (width) => {
       const archive = await measure("archive.astro", rhythmInPage, { width });
-      const tags = await measure("tags/index.astro", rhythmInPage, { width });
+      const search = await measure("search.astro", rhythmInPage, { width });
       expect(archive).toBeGreaterThan(0);
-      expect(tags).toBe(archive);
+      expect(search).toBe(archive);
     },
   );
 

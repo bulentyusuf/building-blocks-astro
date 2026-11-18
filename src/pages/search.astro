@@ -11,7 +11,7 @@ import { groupPostsByTag } from "../lib/tags";
 // markup is ours; keyboard and ARIA behaviour is upstream's. The index and
 // every query stay in the browser.
 
-// Tags for the empty state, through the same threshold as the tag index.
+// Every tag with a page, through the same threshold as the tag pages.
 const tags = groupPostsByTag(await getAllPosts(false)).map((g) => g.tag);
 
 // The main link must be an <a> for the components' keyboard handling. meta.url
@@ -56,10 +56,7 @@ const RESULT_TEMPLATE = `
   description="Search every post on the site."
   noindex
 >
-  <WidePage
-    crumbs={[{ label: "Home", href: "/" }, { label: "Search" }]}
-    heading="Search"
-  >
+  <WidePage heading="Search">
     <!-- Results up to 720px, the tag panel beside them from lg, where both
          fit; it stays while searching. -->
     <div class="lg:grid lg:grid-cols-[minmax(0,45rem)_minmax(17.5rem,22.5rem)] lg:items-start lg:justify-between lg:gap-16">
