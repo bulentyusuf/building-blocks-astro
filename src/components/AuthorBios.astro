@@ -36,9 +36,11 @@ const authors = Astro.props.authors.filter((a) => a.bio);
             <p class="font-ui text-[1.625rem] leading-none font-[800]">
               {author.name}
             </p>
-            {/* Sized here, since the panel sits outside any prose column. */}
+            {/* Sized and styled here, since the panel sits outside any prose
+                column: Preflight leaves a link looking like body text. */}
             <div
-              class="text-[1.0625rem] leading-relaxed"
+              data-bio
+              class="text-[1.0625rem] leading-relaxed [&_a]:font-medium [&_a]:text-brand-crimson [&_a]:underline [&_p+p]:mt-3"
               set:html={renderRichText({ content: author.bio!, headings: [] })}
             />
             {author.slug && (

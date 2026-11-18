@@ -100,8 +100,8 @@
     --color-brand-dark: #ededee;
     --color-outline: #c8c5c2;
     --color-brand-muted: #b3b3b8;
-    /* Lifted so links clear AAA on the charcoal page. */
-    --color-brand-crimson: #f28a9b;
+    /* Lifted so links clear AAA on the charcoal page and on a card. */
+    --color-brand-crimson: #f594a4;
     --color-hairline: rgb(237 237 238 / 0.15);
     --color-cover-keyline: rgb(237 237 238 / 0.18);
     --color-card: #242327;
@@ -177,6 +177,11 @@ html:has(dialog:modal) {
     outline: 2px solid var(--color-brand-crimson);
     outline-offset: 2px;
     border-radius: 2px;
+  }
+  /* The code and prompt blocks stay ink in both schemes, so they take the
+     dark scheme's lifted crimson. */
+  .bg-surface-dark :focus-visible {
+    outline-color: #f594a4;
   }
 }
 

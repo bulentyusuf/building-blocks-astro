@@ -48,6 +48,17 @@ describe("the phone menu", () => {
     expect(await state(page)).toMatchObject({ open: false, focus: "Menu" });
   });
 
+  it("closes when Tab leaves its last link, and stays open inside it", async () => {
+    const page = await menu();
+    const links = page.locator("[data-nav-menu] a");
+    await links.first().focus();
+    await page.keyboard.press("Tab");
+    expect((await state(page)).open).toBe(true);
+    await links.last().focus();
+    await page.keyboard.press("Tab");
+    expect((await state(page)).open).toBe(false);
+  });
+
   it("stays open on a press inside it", async () => {
     const page = await menu();
     const panel = (await page.locator("[data-nav-menu] ul").boundingBox())!;

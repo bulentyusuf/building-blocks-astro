@@ -118,6 +118,11 @@ const navLink =
       if (event.target instanceof Node && menu.contains(event.target)) return;
       menu.open = false;
     });
+    // Tabbing past the last link would leave focus under the scrim.
+    menu.addEventListener("focusout", (event) => {
+      const next = event.relatedTarget;
+      if (next instanceof Node && !menu.contains(next)) menu.open = false;
+    });
     // click, so the whole tap ends on the scrim before it goes.
     menu.querySelector("[data-nav-scrim]")?.addEventListener("click", () => {
       menu.open = false;

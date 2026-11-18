@@ -131,6 +131,30 @@ describe("the enlarged view", () => {
     }
   });
 
+  it("keeps the returned focus when the window shrank while it was open", async () => {
+    const page = await post();
+    await enlarge(page, PANORAMA);
+    await page.setViewportSize({ width: 375, height: 800 });
+    await page.keyboard.press("Escape");
+    const state = await page.evaluate(dialogState);
+    expect(state).toMatchObject({ open: false, focus: "Enlarge image" });
+    expect(state.focusPicture).toContain(PANORAMA);
+  });
+
+  it("speaks a figure's language, which the dialog does not inherit", async () => {
+    const page = await post();
+    await page.evaluate(() => {
+      for (const figure of document.querySelectorAll("article figure"))
+        figure.setAttribute("lang", "de-DE");
+    });
+    await enlarge(page, PANORAMA);
+    expect(
+      await page.evaluate(() =>
+        document.querySelector("#lightbox figure")!.getAttribute("lang"),
+      ),
+    ).toBe("de-DE");
+  });
+
   it("stays open on a click on the picture and closes on one beside it", async () => {
     const page = await post();
     await enlarge(page, LANDSCAPE);
