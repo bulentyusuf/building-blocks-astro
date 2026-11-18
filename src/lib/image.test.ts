@@ -15,6 +15,12 @@ describe("contentfulSrc", () => {
     expect(contentfulSrc(ASSET, 640)).toBe(`${ASSET}?w=640&q=75&fm=webp`);
   });
 
+  it("gives a protocol-relative asset its https scheme", () => {
+    const relative = ASSET.replace("https:", "");
+    expect(relative.startsWith("//")).toBe(true);
+    expect(contentfulSrc(relative, 640)).toBe(`${ASSET}?w=640&q=75&fm=webp`);
+  });
+
   it("leaves another host's URL untouched, lookalikes included", () => {
     for (const src of [
       "/404-gremlin.webp",

@@ -12,13 +12,14 @@ export const WIDEST_SERVED_FILE = WIDTHS[WIDTHS.length - 1];
 // Only `w`, `q` and `fm=webp`: cropping is CSS-side. Another host's URL passes
 // through untouched.
 export function contentfulSrc(src: string, width: number): string {
+  // A //host address would follow the page's scheme, and http breaks the CSP.
+  const absolute = src.startsWith("//") ? `https:${src}` : src;
   try {
-    const url = new URL(src.startsWith("//") ? `https:${src}` : src);
-    if (url.hostname !== CONTENTFUL_IMAGE_HOST) return src;
+    if (new URL(absolute).hostname !== CONTENTFUL_IMAGE_HOST) return src;
   } catch {
     return src;
   }
-  return `${src}?w=${width}&q=75&fm=webp`;
+  return `${absolute}?w=${width}&q=75&fm=webp`;
 }
 
 export interface ImageSource {

@@ -47,17 +47,16 @@ export const STRANDS: Strand[] = [
 ];
 
 /** Which chip the header presses for a path. A strand page or home is the
- *  page itself; a post presses its strand without being it. */
+ *  page itself; a post presses its strand, passed in, without being it. */
 export function currentStrand(
   pathname: string,
-  postStrands: Record<string, string>,
+  postStrand: string | undefined,
 ): { slug: string; onPost: boolean } | null {
   if (pathname === "/") return { slug: "all", onPost: false };
   const strand = /^\/categories\/([^/]+)$/.exec(pathname);
   if (strand) return { slug: strand[1], onPost: false };
-  const post = /^(?:\/de)?\/posts\/([^/]+)$/.exec(pathname);
-  const slug = post && postStrands[post[1]];
-  return slug ? { slug, onPost: true } : null;
+  const post = /^(?:\/de)?\/posts\/[^/]+$/.test(pathname);
+  return post && postStrand ? { slug: postStrand, onPost: true } : null;
 }
 
 /** A post's strand, or Blogging's colours under its own name when the

@@ -63,6 +63,12 @@ export function postPageTags(
   );
 }
 
+/** The archive and the tag index: every post as text, no cover or portrait,
+ *  so the every-post tag and the footer cover all they show. */
+export function indexPageTags(footer: Author[]): string[] {
+  return [...new Set([POSTS_TAG, ...footer.flatMap(authorTags)])];
+}
+
 /**
  * A page of posts. `of` is the strand, tag or author whose posts it lists,
  * absent on a page that lists them whatever they link to.

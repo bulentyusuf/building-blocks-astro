@@ -3,7 +3,7 @@ import PostRow from "../components/PostRow.astro";
 import WidePage from "../components/WidePage.astro";
 import Layout from "../layouts/Layout.astro";
 import { getAllAuthors, getAllPosts, getGermanPostSlugs } from "../lib/api";
-import { listingPageTags } from "../lib/cache-tags";
+import { indexPageTags } from "../lib/cache-tags";
 import { SITE_DESCRIPTION, SITE_TITLE, SITE_URL } from "../lib/constants";
 import { hold } from "../lib/route-cache";
 import type { ListPost } from "../lib/types";
@@ -14,7 +14,7 @@ const [posts, germanSlugs, authors] = await Promise.all([
   getGermanPostSlugs(false),
   getAllAuthors(false),
 ]);
-hold(Astro.cache, listingPageTags(posts, authors));
+hold(Astro.cache, indexPageTags(authors));
 const german = new Set(germanSlugs);
 
 // Posts arrive newest first, so each year's list does too.

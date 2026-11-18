@@ -98,7 +98,10 @@ function figure(
   const width = asset.width ?? 1200;
   const height = asset.height ?? 800;
   const image = `<img${attributes({
-    ...responsiveSource(asset.url, "(max-width: 768px) 100vw, 672px"),
+    ...responsiveSource(
+      asset.url,
+      "(width < 48rem) calc(100vw - 2rem), min(calc(100vw - 12.25rem), 42rem)",
+    ),
     alt: asset.title ?? "",
     width,
     height,

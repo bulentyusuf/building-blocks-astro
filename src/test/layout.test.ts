@@ -75,8 +75,8 @@ function coversInPage(): Cover[] {
 // under is a blurry picture; further over downloads more than is shown.
 // A cover with no fixed shape (the closing card's, md to xl) is as tall as
 // the card's text, which `sizes` cannot know, so it may claim up to 2.2 times.
-function wrongClaims(covers: Cover[]): string[] {
-  if (covers.length < 6) return ["home rendered no feature card and cards"];
+function wrongClaims(covers: Cover[], fewest = 6): string[] {
+  if (covers.length < fewest) return [`rendered fewer than ${fewest} images`];
   return covers
     .filter(
       (c) =>
@@ -150,6 +150,70 @@ describe("card covers", () => {
             "sizes",
             "(width < 48rem) calc(100vw - 2rem - 6px), (width < 75rem) calc(50vw - 3.625rem - 3px), (width < 80rem) calc(33.875rem - 3px), calc(65.5rem / 3 - 6px)",
           );
+      });
+      expect(wrongClaims(await page.evaluate(coversInPage))).not.toEqual([]);
+    } finally {
+      await context.close();
+    }
+  }, 30_000);
+});
+
+describe("a post's cover and figures", () => {
+  // Cover, three body figures and two related cards in the fixture post. A
+  // figure never crops, so it is measured by its box alone.
+  const claims = async (width: number, css?: string) => {
+    const { page, context } = await open(browser, "posts/[slug].astro", {
+      width,
+      css,
+    });
+    try {
+      const images = await page.evaluate(coversInPage);
+      const figures = await page.evaluate(() =>
+        [...document.querySelectorAll("main article img[sizes]")].map((img) =>
+          img.closest("figure") ? img.getBoundingClientRect().width : null,
+        ),
+      );
+      return wrongClaims(
+        images.map((c, i) => ({ ...c, rendered: figures[i] ?? c.rendered })),
+        6,
+      );
+    } finally {
+      await context.close();
+    }
+  };
+
+  it.each([375, 767, 768, 820, 1024, 1199, 1200, 1440])(
+    "claim the width they render at, at %ipx",
+    async (width) => {
+      expect(await claims(width)).toEqual([]);
+    },
+    30_000,
+  );
+
+  it.each([375, 768, 1024, 1199, 1700, 2000])(
+    "claim the width they render at, at %ipx with a 20px root",
+    async (width) => {
+      expect(await claims(width, "html{font-size:20px}")).toEqual([]);
+    },
+    30_000,
+  );
+
+  // Known-bad control: the claims written in px before, at a tablet width.
+  it("would report the old px claims", async () => {
+    const { page, context } = await open(browser, "posts/[slug].astro", {
+      width: 820,
+    });
+    try {
+      await page.evaluate(() => {
+        const [cover, ...figures] = document.querySelectorAll(
+          "main article img[sizes]",
+        );
+        cover.setAttribute(
+          "sizes",
+          "(max-width: 768px) calc(100vw - 2rem), 1120px",
+        );
+        for (const figure of figures.slice(0, 3))
+          figure.setAttribute("sizes", "(max-width: 768px) 100vw, 672px");
       });
       expect(wrongClaims(await page.evaluate(coversInPage))).not.toEqual([]);
     } finally {
