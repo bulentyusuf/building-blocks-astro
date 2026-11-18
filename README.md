@@ -290,7 +290,8 @@ you deploy.
   set it to `true` so the site is reachable at its `workers.dev` address.
 - **`llms.txt`.** `public/llms.txt` is a hand-written description of the
   original site, for AI tools, and every link in it points there. Rewrite it
-  or delete it.
+  or delete it. `.github/workflows/llms-link-check.yml` checks its links
+  weekly, but only once the repository variable `SITE_URL` is set in GitHub.
 - **Redirects.** `public/_redirects` holds the original site's renamed
   addresses. Empty it, keeping any rule you want.
 - **Strands.** The header's three chips and the strand pages are the
