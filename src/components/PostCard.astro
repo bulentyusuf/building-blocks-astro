@@ -9,21 +9,24 @@ interface Props {
   post: ListPost;
   showStrand: boolean;
   /** Columns from xl: 2 or 3. "closing" is 3 from xl, and below it the full
-   *  row with cover and text side by side, sized as one card of two. */
+   *  row with cover and text side by side. */
   across: 2 | 3 | "closing";
 }
 const { post, showStrand, across } = Astro.props;
 const strand = strandFor(post.category) ?? STRANDS[0];
 const closing = across === "closing";
 // Each claim keeps rem spacing and the px borders apart, so it stays exact
-// at any font size. The frame is 70rem inside its padding, gaps 2.25rem. The
-// closing card's cover is half a full row, so its borders cost it 3px, not 6.
-const border = closing ? "3px" : "6px";
-const twoAcross = `(width < 48rem) calc(100vw - 2rem - 6px), (width < 75rem) calc(50vw - 3.625rem - ${border}), `;
+// at any font size. The frame is 70rem inside its padding, gaps 2.25rem.
+const twoAcross = `(width < 48rem) calc(100vw - 2rem - 6px), (width < 75rem) calc(50vw - 3.625rem - 6px), `;
+// Below xl the closing card's cover fills the card's height, which follows
+// its text, so it is drawn wider than its column: claim the whole row.
+const closingRow = `(width < 48rem) calc(100vw - 2rem - 6px), (width < 75rem) calc(100vw - 5rem - 6px), (width < 80rem) calc(70rem - 6px), `;
 const sizes =
   across === 2
     ? `${twoAcross}calc(33.875rem - 6px)`
-    : `${twoAcross}(width < 80rem) calc(33.875rem - ${border}), calc(65.5rem / 3 - 6px)`;
+    : closing
+      ? `${closingRow}calc(65.5rem / 3 - 6px)`
+      : `${twoAcross}(width < 80rem) calc(33.875rem - 6px), calc(65.5rem / 3 - 6px)`;
 ---
 
 <!-- Whole class strings throughout, so Tailwind sees each one. -->
@@ -37,7 +40,16 @@ const sizes =
   ]}
 >
   <!-- One column to md, then two, then `across` from xl. -->
-  <CardCover post={post} sizes={sizes} class="aspect-3/2" />
+  <!-- Below xl the closing cover fills the card's height, never under 3:2. -->
+  <CardCover
+    post={post}
+    sizes={sizes}
+    class={
+      closing
+        ? "aspect-3/2 md:max-xl:aspect-auto md:max-xl:self-stretch md:max-xl:before:block md:max-xl:before:pt-[66.6667%] md:max-xl:before:content-['']"
+        : "aspect-3/2"
+    }
+  />
   <div
     class={
       closing
