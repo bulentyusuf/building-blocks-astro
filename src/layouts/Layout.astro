@@ -4,7 +4,7 @@ import { Font } from "astro:assets";
 import BackToTop from "../components/BackToTop.astro";
 import Footer from "../components/Footer.astro";
 import Header from "../components/Header.astro";
-import { getAllAuthors, getAllPosts } from "../lib/api";
+import { getAllAuthors } from "../lib/api";
 import {
   DEFAULT_LOCALE,
   DEFAULT_OG_LOCALE,
@@ -34,6 +34,8 @@ interface Props {
   };
   /** A draft page: drafts feed the chrome too, and the exit button shows. */
   preview?: boolean;
+  /** A post page's strand, so the header presses its chip. */
+  postStrand?: string;
 }
 
 const {
@@ -43,24 +45,19 @@ const {
   noindex = false,
   social,
   preview = false,
+  postStrand,
 } = Astro.props;
 
 const cardImage = social?.image ?? `${SITE_URL}/be_useful.jpg`;
 
-const [posts, authors] = await Promise.all([
-  getAllPosts(preview),
-  getAllAuthors(preview),
-]);
-const postStrands = Object.fromEntries(
-  posts.flatMap((p) => (p.category ? [[p.slug, p.category.slug]] : [])),
-);
+const authors = await getAllAuthors(preview);
 // The route, without the file name a build gives it. A draft presses the chip
 // its published page would.
 const path =
   Astro.url.pathname.replace(/(\/index)?\.html$/, "").replace(/\/$/, "") || "/";
 const strand = currentStrand(
   preview ? path.slice(PREVIEW_PATH.length) : path,
-  postStrands,
+  postStrand,
 );
 ---
 

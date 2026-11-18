@@ -1,6 +1,7 @@
 import { describe, it, expect } from "vitest";
 import {
   POSTS_TAG,
+  indexPageTags,
   listingPageTags,
   listingTag,
   postPageTags,
@@ -132,6 +133,23 @@ describe("a page that lists every post", () => {
   it("is purged by a cover it shows and by no other image", () => {
     expect(purged(tags, asset("cover2"))).toBe(true);
     expect(purged(tags, asset("cover9"))).toBe(false);
+  });
+});
+
+describe("the archive and the tag index", () => {
+  const tags = indexPageTags(footer);
+
+  it("is purged by any entry and by a footer portrait", () => {
+    expect(purged(tags, published("post9"))).toBe(true);
+    expect(purged(tags, removed("post1"))).toBe(true);
+    expect(purged(tags, asset("portrait2"))).toBe(true);
+  });
+
+  it("is left alone by a cover, which it never shows", () => {
+    // Known-bad control: a page of cards holding the same posts is purged.
+    const cards = listingPageTags([listPost(1), listPost(2)], footer);
+    expect(purged(cards, asset("cover1"))).toBe(true);
+    expect(purged(tags, asset("cover1"))).toBe(false);
   });
 });
 

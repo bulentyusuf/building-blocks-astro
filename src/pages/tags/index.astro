@@ -2,7 +2,7 @@
 import WidePage from "../../components/WidePage.astro";
 import Layout from "../../layouts/Layout.astro";
 import { getAllAuthors, getAllPosts } from "../../lib/api";
-import { listingPageTags } from "../../lib/cache-tags";
+import { indexPageTags } from "../../lib/cache-tags";
 import { SITE_DESCRIPTION, SITE_TITLE, SITE_URL } from "../../lib/constants";
 import { hold } from "../../lib/route-cache";
 import { MIN_POSTS_PER_TAG, groupPostsByTag } from "../../lib/tags";
@@ -12,7 +12,7 @@ const [posts, authors] = await Promise.all([
   getAllPosts(false),
   getAllAuthors(false),
 ]);
-hold(Astro.cache, listingPageTags(posts, authors));
+hold(Astro.cache, indexPageTags(authors));
 const groups = groupPostsByTag(posts);
 const title = `Tags | ${SITE_TITLE}`;
 ---
