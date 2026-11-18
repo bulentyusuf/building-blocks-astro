@@ -143,3 +143,21 @@ export function analyticsToken(
 ): string {
   return allowIndexing ? (value?.trim() ?? "") : "";
 }
+
+/**
+ * The site's public address. A closed build may fall back to the original
+ * site's; an open one must name its own, or every canonical link points there.
+ */
+export function siteUrl(
+  value: string | undefined,
+  allowIndexing: boolean,
+): string {
+  const url = value?.trim();
+  if (url) return url;
+  if (allowIndexing) {
+    throw new Error(
+      "SITE_URL is empty on a build with ALLOW_INDEXING=true. Set it to the site's own address, such as https://example.com, as a build variable.",
+    );
+  }
+  return "https://beuseful.net";
+}

@@ -11,6 +11,7 @@ import { searchIndex } from "./integrations/search-index";
 import {
   analyticsToken,
   indexingAllowed,
+  siteUrl,
   staticHeadersFile,
 } from "./src/lib/security-headers";
 
@@ -38,7 +39,7 @@ const staticHeaders: AstroIntegration = {
 };
 
 export default defineConfig({
-  site: env.SITE_URL?.trim() || "https://beuseful.net",
+  site: siteUrl(env.SITE_URL, allowIndexing),
   trailingSlash: "never",
   build: { format: "file" },
   adapter: cloudflare({ imageService: "passthrough" }),

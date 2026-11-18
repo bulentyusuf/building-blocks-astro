@@ -10,6 +10,7 @@ import {
   contentSecurityPolicy,
   contentSecurityPolicyFor,
   indexingAllowed,
+  siteUrl,
   cachedPageHeaders,
   onDemandHeaders,
   staticHeadersFile,
@@ -346,5 +347,22 @@ describe("the build flags", () => {
     expect(config).toMatch(/__ANALYTICS_TOKEN__:/);
     expect(config).not.toMatch(envDefine);
     expect(`define: {\n  "${"import.meta.env."}X": "1",\n}`).toMatch(envDefine);
+  });
+});
+
+describe("the site address", () => {
+  it("is the given one, trimmed, open or closed", () => {
+    for (const open of [false, true]) {
+      expect(siteUrl(" https://example.com\n", open)).toBe(
+        "https://example.com",
+      );
+    }
+  });
+
+  it("falls back to the original site only on a closed build", () => {
+    for (const value of [undefined, "", "   "]) {
+      expect(siteUrl(value, false), String(value)).toBe("https://beuseful.net");
+      expect(() => siteUrl(value, true), String(value)).toThrow(/SITE_URL/);
+    }
   });
 });

@@ -122,17 +122,17 @@ cp .env.example .env
 
 Then fill in `.env`. It is ignored by git, so nothing in it is committed.
 
-| Value                             | What it is, and where to find it                                                                                                                                                |
-| --------------------------------- | ------------------------------------------------------------------------------------------------------------------------------------------------------------------------------- |
-| `CONTENTFUL_SPACE_ID`             | Your space's id. In Contentful, Settings, API keys, Add API key. The new key's page shows it                                                                                    |
-| `CONTENTFUL_ACCESS_TOKEN`         | The Content Delivery API token, on the same page. It reads published content                                                                                                    |
-| `CONTENTFUL_PREVIEW_ACCESS_TOKEN` | The Content Preview API token, on the same page. It reads drafts, for [draft previews](#draft-previews)                                                                         |
-| `CONTENTFUL_PREVIEW_SECRET`       | Any long random string you make up. It guards draft previews                                                                                                                    |
-| `CONTENTFUL_WEBHOOK_SECRET`       | Another long random string. It is only used by [instant publishing](#instant-publishing), but Cloudflare refuses a deploy without it, so set one now                            |
-| `SITE_URL`                        | Your site's address, such as `https://example.com`. Leave it empty locally. Without it in production, every canonical link, the sitemap and the feed point at the original site |
-| `ALLOW_INDEXING`                  | Leave empty locally. See step 7                                                                                                                                                 |
-| `ANALYTICS_TOKEN`                 | Optional. Leave empty. See [Indexing](#indexing)                                                                                                                                |
-| `ROUTE_CACHE`                     | Leave empty. See step 9                                                                                                                                                         |
+| Value                             | What it is, and where to find it                                                                                                                        |
+| --------------------------------- | ------------------------------------------------------------------------------------------------------------------------------------------------------- |
+| `CONTENTFUL_SPACE_ID`             | Your space's id. In Contentful, Settings, API keys, Add API key. The new key's page shows it                                                            |
+| `CONTENTFUL_ACCESS_TOKEN`         | The Content Delivery API token, on the same page. It reads published content                                                                            |
+| `CONTENTFUL_PREVIEW_ACCESS_TOKEN` | The Content Preview API token, on the same page. It reads drafts, for [draft previews](#draft-previews)                                                 |
+| `CONTENTFUL_PREVIEW_SECRET`       | Any long random string you make up. It guards draft previews                                                                                            |
+| `CONTENTFUL_WEBHOOK_SECRET`       | Another long random string. It is only used by [instant publishing](#instant-publishing), but Cloudflare refuses a deploy without it, so set one now    |
+| `SITE_URL`                        | Your site's address, such as `https://example.com`. Leave it empty locally. Required in production: a build with `ALLOW_INDEXING=true` stops without it |
+| `ALLOW_INDEXING`                  | Leave empty locally. See step 7                                                                                                                         |
+| `ANALYTICS_TOKEN`                 | Optional. Leave empty. See [Indexing](#indexing)                                                                                                        |
+| `ROUTE_CACHE`                     | Leave empty. See step 9                                                                                                                                 |
 
 One way to make a long random string is `openssl rand -hex 32`.
 
@@ -268,11 +268,12 @@ A fork inherits the original site's identity, and some of it would point your
 readers or search engines at the original. Change these before
 you deploy.
 
-- **Site address (required).** `SITE_URL` as a build variable. Without it the
-  build falls back to `https://beuseful.net`, the default in `astro.config.ts`,
-  and every canonical link, the sitemap, the feed and the social cards name
-  that site. The default is also written in a comment in `.env.example`, and
-  `scripts/audit-a11y.mjs` uses it when no address is given.
+- **Site address (required).** `SITE_URL` as a build variable. A build with
+  `ALLOW_INDEXING=true` stops with an error naming `SITE_URL` until it is set.
+  A closed build falls back to `https://beuseful.net`, the default in
+  `src/lib/security-headers.ts`, so local and preview builds name that site in
+  their canonical links, sitemap, feed and social cards. `scripts/audit-a11y.mjs`
+  uses the same default when no address is given.
 - **Site identity (required).** In `src/lib/constants.ts`: `SITE_TITLE`,
   `SITE_DESCRIPTION`, `HOME_TITLE`, `HOME_DESCRIPTION`, `SITE_AUTHOR` and
   `SITE_FOOTER_BLURB`. The title also names the web manifest.
