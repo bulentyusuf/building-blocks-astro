@@ -20,7 +20,8 @@ export const SITE_AUTHOR = "Bulent Yusuf";
 export const SITE_FOOTER_BLURB =
   "A blog about content, code, and collaborating with generative AI. Written in Munich and published from a headless CMS.";
 
-export const SITE_REPO_URL = "https://github.com/bulentyusuf/building-blocks";
+export const SITE_REPO_URL =
+  "https://github.com/bulentyusuf/building-blocks-astro";
 
 // Must match the GraphQL limit and the Contentful validation, or a fourth
 // author silently vanishes.
