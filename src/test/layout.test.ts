@@ -29,10 +29,17 @@ async function measure<T>(
   }
 }
 
-type Cover = { sizes: string; rendered: number; claimed: number };
+type Cover = {
+  sizes: string;
+  rendered: number;
+  claimed: number;
+  tall: boolean;
+};
 
 // Runs in the page. Resolves each `sizes` as the browser would: the first
-// matching media condition, its length laid out.
+// matching media condition, its length laid out. A cover crops with
+// `object-cover`, so it is drawn at the wider of its box and its height at the
+// picture's shape. A picture not yet loaded counts as the 3:2 a cover is cut at.
 function coversInPage(): Cover[] {
   const resolve = (sizes: string) => {
     for (const part of sizes.split(/,\s*/)) {
@@ -47,22 +54,36 @@ function coversInPage(): Cover[] {
     }
     return NaN;
   };
-  return [...document.querySelectorAll("main article img[sizes]")].map(
-    (img) => ({
+  return [
+    ...document.querySelectorAll<HTMLImageElement>("main article img[sizes]"),
+  ].map((img) => {
+    const box = img.getBoundingClientRect();
+    const shape = img.naturalHeight
+      ? img.naturalWidth / img.naturalHeight
+      : 1.5;
+    return {
       sizes: img.getAttribute("sizes")!,
-      rendered: img.getBoundingClientRect().width,
+      rendered: Math.max(box.width, box.height * shape),
       claimed: resolve(img.getAttribute("sizes")!),
-    }),
-  );
+      // No fixed shape: the cover takes its card's height.
+      tall: getComputedStyle(img.parentElement!).aspectRatio === "auto",
+    };
+  });
 }
 
 // A claim up to 10% over is the slack a hand-written `sizes` needs. Any
 // under is a blurry picture; further over downloads more than is shown.
+// A cover with no fixed shape (the closing card's, md to xl) is as tall as
+// the card's text, which `sizes` cannot know, so it may claim up to 2.2 times.
 function wrongClaims(covers: Cover[]): string[] {
   if (covers.length < 6) return ["home rendered no feature card and cards"];
   return covers
     .filter(
-      (c) => !(c.claimed >= c.rendered - 1 && c.claimed <= c.rendered * 1.1),
+      (c) =>
+        !(
+          c.claimed >= c.rendered - 1 &&
+          c.claimed <= c.rendered * (c.tall ? 2.2 : 1.1)
+        ),
     )
     .map(
       (c) =>
@@ -113,6 +134,75 @@ describe("card covers", () => {
     },
     30_000,
   );
+
+  // Known-bad control: the closing card claiming half a row while its cover
+  // is as tall as its text, as it did before the cover filled its height.
+  it("would report a closing card claiming half a row", async () => {
+    const { page, context } = await open(browser, "index.astro", {
+      width: 780,
+      css: "html{font-size:20px}",
+    });
+    try {
+      await page.evaluate(() => {
+        document
+          .querySelectorAll("main article img[sizes]")[5]
+          .setAttribute(
+            "sizes",
+            "(width < 48rem) calc(100vw - 2rem - 6px), (width < 75rem) calc(50vw - 3.625rem - 3px), (width < 80rem) calc(33.875rem - 3px), calc(65.5rem / 3 - 6px)",
+          );
+      });
+      expect(wrongClaims(await page.evaluate(coversInPage))).not.toEqual([]);
+    } finally {
+      await context.close();
+    }
+  }, 30_000);
+});
+
+// Runs in the page. The closing card, the stream's sixth, and its cover.
+function closingInPage() {
+  const cards = document.querySelectorAll("main article");
+  if (cards.length !== 6) return { band: NaN, shape: NaN };
+  const card = cards[5];
+  const box = card.getBoundingClientRect();
+  const cover = card
+    .querySelector("img")!
+    .parentElement!.getBoundingClientRect();
+  const inner =
+    box.bottom - parseFloat(getComputedStyle(card).borderBottomWidth);
+  return { band: inner - cover.bottom, shape: cover.width / cover.height };
+}
+
+describe("the closing card", () => {
+  const roots = [
+    ["16px", ""],
+    ["20px", "html{font-size:20px}"],
+  ];
+
+  it.each([780, 900, 1100].flatMap((width) => roots.map((r) => [width, ...r])))(
+    "at %ipx, %s root, has a cover as tall as the card",
+    async (width, _root, css) => {
+      const closing = await measure("index.astro", closingInPage, {
+        width: width as number,
+        css: css as string,
+      });
+      expect(Math.abs(closing.band)).toBeLessThanOrEqual(1);
+    },
+    30_000,
+  );
+
+  it.each([375, 1280])("at %ipx has a 3:2 cover", async (width) => {
+    const closing = await measure("index.astro", closingInPage, { width });
+    expect(closing.shape).toBeCloseTo(1.5, 1);
+  });
+
+  // Known-bad control: the cover held at 3:2 beside taller text.
+  it("would report the band under a 3:2 cover", async () => {
+    const closing = await measure("index.astro", closingInPage, {
+      width: 780,
+      css: "html{font-size:20px}main article>div:has(>img){aspect-ratio:3/2!important;align-self:start!important}",
+    });
+    expect(closing.band).toBeGreaterThan(1);
+  }, 30_000);
 });
 
 // Runs in the page. The feature card's cover and text.
