@@ -122,8 +122,8 @@ can. No UI framework ships to the browser.
   selects `total`. Drop `total` and the first response becomes the whole result.
 - **Scheduling is Contentful's job.** `date` is display metadata, never a
   filter in a query.
-- **The locale is `en-GB`, with opt-in `de-DE` posts.** American formats are a
-  regression. German has no fallback: an untranslated field is empty.
+- **The language is `DEFAULT_LOCALE`, here `en-GB`, with opt-in `de-DE` posts.**
+  Never hard-code a locale. German has no fallback: an untranslated field is empty.
 - **Posts carry `authors`, an ordered list capped at three.** `MAX_AUTHORS`,
   the GraphQL limit and the Contentful validation move together.
 - **Images are plain `<img>` elements on Contentful's image CDN.** Only `w`,
@@ -185,5 +185,5 @@ block 2`), or a code block's filename.
   control beside it. Do not weaken a guard to make a change pass.
 - **`node scripts/url-parity.mjs <live> <candidate>`** reports any path that
   answers differently.
-- British spelling. Comments are one or two lines and say only what the code
-  cannot. Conventional commits, one concern per pull request.
+- Spelling follows `DEFAULT_LOCALE`, here British. Comments are one or two lines
+  and say only what the code cannot. Conventional commits, one concern per pull request.
