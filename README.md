@@ -84,7 +84,6 @@ A recurring subject of the blog is the process of building and maintaining it. M
 - A build is closed to search engines unless `ALLOW_INDEXING=true`
 - Formatting, type and test checks on every pull request, and Cloudflare builds each branch and reports on the pull request too
 - CodeQL scanning, branch protection and Dependabot, configured in GitHub's settings rather than in the code
-- A URL parity script that compares the live site with a build, path by path
 
 ## 🚀 Getting started (fork your own)
 
@@ -271,8 +270,7 @@ you deploy.
   `ALLOW_INDEXING=true` stops with an error naming `SITE_URL` until it is set.
   A closed build falls back to `https://beuseful.net`, the default in
   `src/lib/security-headers.ts`, so local and preview builds name that site in
-  their canonical links, sitemap, feed and social cards. `scripts/audit-a11y.mjs`
-  uses the same default when no address is given.
+  their canonical links, sitemap, feed and social cards.
 - **Site identity (required).** In `src/lib/constants.ts`: `SITE_TITLE`,
   `SITE_DESCRIPTION`, `HOME_TITLE`, `HOME_DESCRIPTION`, `SITE_AUTHOR` and
   `SITE_FOOTER_BLURB`. The title also names the web manifest.
@@ -345,8 +343,7 @@ you deploy.
 - **`CLAUDE.md` (optional).** The standing rules for working on the repo with
   Claude Code. It is useful as it is, but some rules are this site's own
   choices, such as British spelling and the strand names. Edit it to suit.
-- **This README.** The introduction and the URL parity example describe the
-  original site.
+- **This README.** The introduction describes the original site.
 
 ## 🛠 Working on it
 
@@ -368,16 +365,15 @@ space's purge webhook.
 
 ### Commands
 
-| Command                 | What it does                                                                                                          |
-| ----------------------- | --------------------------------------------------------------------------------------------------------------------- |
-| `npm run dev`           | Development server, in the Workers runtime                                                                            |
-| `npm run build`         | Type-check, then build to `dist/`                                                                                     |
-| `npm run preview`       | Serve the build locally, in the Workers runtime                                                                       |
-| `npm test`              | Unit tests                                                                                                            |
-| `npm run check`         | Type-check only                                                                                                       |
-| `npm run format`        | Format every file with Prettier                                                                                       |
-| `npm run audit:a11y`    | Accessibility audit of a running site in a real browser, by hand: `SITE_URL=http://localhost:4321 npm run audit:a11y` |
-| `npm run measure:bloat` | Prints the repo's bloat signals, by hand, such as what ships to readers and over-long comments                        |
+| Command                 | What it does                                                                                   |
+| ----------------------- | ---------------------------------------------------------------------------------------------- |
+| `npm run dev`           | Development server, in the Workers runtime                                                     |
+| `npm run build`         | Type-check, then build to `dist/`                                                              |
+| `npm run preview`       | Serve the build locally, in the Workers runtime                                                |
+| `npm test`              | Unit tests                                                                                     |
+| `npm run check`         | Type-check only                                                                                |
+| `npm run format`        | Format every file with Prettier                                                                |
+| `npm run measure:bloat` | Prints the repo's bloat signals, by hand, such as what ships to readers and over-long comments |
 
 `npm run preview` is the one to trust for anything the Worker does: it runs
 the build in the same runtime as production.
@@ -490,17 +486,6 @@ https://<site>/api/draft?secret=<CONTENTFUL_PREVIEW_SECRET>&type=page&slug={entr
 
 It opens the draft at `/preview/pages/<slug>`. Listing pages, the home page
 and the archive, are not previewed with draft posts in them.
-
-### URL parity
-
-```bash
-node scripts/url-parity.mjs https://beuseful.net http://localhost:4321
-```
-
-Compares the live site with a local build, for use after a change that could
-move a URL. It requests every path in the first site's sitemap, and every
-source in this repo's `public/_redirects`, from both sites, and prints any
-that answer differently.
 
 ### Indexing
 

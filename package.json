@@ -13,7 +13,6 @@
     "test": "vitest run",
     "format": "prettier --write .",
     "format:check": "prettier --check .",
-    "audit:a11y": "node scripts/audit-a11y.mjs",
     "measure:bloat": "node scripts/measure-bloat.mjs",
     "build:seed": "node contentful/build-seed.mjs",
     "import:contentful": "npx --yes contentful-import@10.6.0 --content-file contentful/export.json --environment-id master",
