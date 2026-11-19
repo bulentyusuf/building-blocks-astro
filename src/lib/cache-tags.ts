@@ -9,7 +9,7 @@ import type { Author, Identified, ListPost, Post } from "./types";
 //   posts    the page lists posts whatever they link to.
 // src/lib/purge.ts turns a change into the tags to purge.
 
-/** On home, the archive and the tag index, and purged by every entry. */
+/** On home and the archive, and purged by every entry. */
 export const POSTS_TAG = "posts";
 
 export const listingTag = (id: string) => `in.${id}`;
