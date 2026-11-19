@@ -17,11 +17,11 @@
 
 A few foundational posts that explain what this blog is and how it is built. For the full, current list of posts, use the live indexes in the next section rather than this file.
 
-- [Building blocks for building blogs](https://beuseful.net/posts/building-blocks): The site's technical foundations, including Next.js, Contentful, TailwindCSS, GitHub, Vercel, Midjourney, and Claude.
-- [Rebuilding this site with Claude as my copilot](https://beuseful.net/posts/rebuilding-blog-claude-copilot): What it is like to upgrade and maintain the blog with Claude as a coding collaborator.
-- [The Blogger's Blueprint](https://beuseful.net/posts/bloggers-blueprint): Roadmap-style post about planned improvements to the blog.
+- [Building blocks for building blogs](https://beuseful.net/posts/building-blocks): The site's technical foundations, including Contentful, Astro, Cloudflare, GitHub, Midjourney, and Claude, and the content model behind them.
+- [Pay it forward: Fork this blog template and make it yours](https://beuseful.net/posts/fork-blog-template): How the code behind this site became a template anyone can fork, with its content model and starter content.
+- [Static site search, like the index in a reference book](https://beuseful.net/posts/static-site-search-pagefind): How site search works, with an index built ahead of time and searched entirely in the reader's browser.
+- [Maintaining an llms.txt that nobody's reading](https://beuseful.net/posts/llms-txt-nobody-reading): Why this file exists, and how its links are kept from going stale.
 - [Publish a blog post without opening the CMS?](https://beuseful.net/posts/publish-blog-post-without-opening-cms): Using a Contentful MCP connector to create a post through a chat interface.
-- [Structuring content like a trail of breadcrumbs](https://beuseful.net/posts/structuring-content-breadcrumbs): How pagination, breadcrumbs, category and author pages, and the sitemap and metadata layer fit together.
 
 ## Finding the full post list
 
