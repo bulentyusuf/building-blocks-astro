@@ -24,11 +24,11 @@ const STREAM_POSTS = 6;
 const [latest, ...previous] = posts.slice(0, STREAM_POSTS);
 const older = posts.slice(STREAM_POSTS);
 
-// From xl: two across for 2 or 4 cards, three otherwise. Five sit 2 + 3 on six
-// columns, the newer pair wide, so size steps down with age. Below xl the
-// fifth takes the row side by side rather than sit alone.
+// From xl: two across for 1, 2 or 4 cards, three otherwise, so a lone card is
+// never a third. Five sit 2 + 3 on six columns, the newer pair wide, so size
+// steps down with age. Below xl the fifth takes the row side by side.
 const five = previous.length === 5;
-const across = previous.length === 2 || previous.length === 4 ? 2 : 3;
+const across = [1, 2, 4].includes(previous.length) ? 2 : 3;
 // The pair spans half the row, so it sizes and sets type as two across.
 const cardAcross = (i: number) =>
   !five ? across : i < 2 ? 2 : i === 4 ? "closing" : 3;

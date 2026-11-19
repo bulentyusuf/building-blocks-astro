@@ -47,7 +47,10 @@ const navLink =
         <details data-nav-menu class="group md:hidden">
           <summary
             aria-label="Menu"
-            class:list={["list-none cursor-pointer select-none", squareButton]}
+            class:list={[
+              "list-none cursor-pointer select-none group-open:translate-[3px] group-open:shadow-none",
+              squareButton,
+            ]}
           >
             <!-- Two icons, swapped by the [open] attribute. The X is what tells
                  a reader how to close the menu. -->
