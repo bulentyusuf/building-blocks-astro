@@ -150,6 +150,8 @@ can. No UI framework ships to the browser.
 - **`THEME_COLOR` and `THEME_COLOR_DARK` twin `--color-brand-bg`.** Change both.
 - **Border roles are not interchangeable**: the hairline (dividers), the cover
   keyline, the table tokens, the quiet edge (read) and the ink edge (pressed).
+- **A hard shadow means you can press it**, and pressing removes it. A panel,
+  box or picture you only read has none. The logo is the one link without.
 - **Corners come from three radius tokens by role**: `rounded-container`,
   `-content`, `-nested`. No literal radius on a box.
 - **One focus indicator, in `@layer base`.** The named exceptions are the
