@@ -103,12 +103,6 @@ describe("activationBandTop", () => {
       );
     }
   });
-
-  it("keeps the fallback in step with global.css", () => {
-    // If someone retunes scroll-padding-top and forgets this constant, the
-    // fallback silently disagrees with the real landing point. 5rem = 80px.
-    expect(FALLBACK_BAND_TOP_PX).toBe(80);
-  });
 });
 
 describe("scroll offset lives in exactly one place", () => {

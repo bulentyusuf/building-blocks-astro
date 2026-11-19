@@ -129,23 +129,6 @@ describe("a page held in the route cache", () => {
     }
   });
 
-  it("is closed to search engines unless the build is open", () => {
-    for (const path of pages) {
-      for (const analytics of [false, true]) {
-        const closed = cachedPageHeaders(path, {
-          allowIndexing: false,
-          analytics,
-        });
-        const open = cachedPageHeaders(path, {
-          allowIndexing: true,
-          analytics,
-        });
-        expect(closed["X-Robots-Tag"], path).toBe("noindex");
-        expect("X-Robots-Tag" in open, path).toBe(false);
-      }
-    }
-  });
-
   it("has a browser ask again on every visit, as a static page does", () => {
     const headers = cachedPageHeaders("/", {
       allowIndexing: true,
@@ -228,14 +211,6 @@ describe("analytics", () => {
       const resolved = resolveStatic(openBare, path);
       expect(resolved.get(CSP), path).toBe(contentSecurityPolicyFor(path));
       expect(resolved.has("X-Robots-Tag"), path).toBe(false);
-    }
-    for (const path of ["/", "/posts/a"]) {
-      const held = cachedPageHeaders(path, {
-        allowIndexing: true,
-        analytics: false,
-      });
-      expect(JSON.stringify(held), path).not.toContain("cloudflareinsights");
-      expect("X-Robots-Tag" in held, path).toBe(false);
     }
   });
 

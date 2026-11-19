@@ -136,7 +136,7 @@ describe("a page that lists every post", () => {
   });
 });
 
-describe("the archive and the tag index", () => {
+describe("the archive", () => {
   const tags = indexPageTags(footer);
 
   it("is purged by any entry and by a footer portrait", () => {
