@@ -4,6 +4,7 @@ import WidePage from "../components/WidePage.astro";
 import Layout from "../layouts/Layout.astro";
 import { getAllAuthors, getAllPosts, getGermanPostSlugs } from "../lib/api";
 import { indexPageTags } from "../lib/cache-tags";
+import { calendarYear } from "../lib/date";
 import { SITE_DESCRIPTION, SITE_TITLE, SITE_URL } from "../lib/constants";
 import { hold } from "../lib/route-cache";
 import type { ListPost } from "../lib/types";
@@ -20,7 +21,7 @@ const german = new Set(germanSlugs);
 // Posts arrive newest first, so each year's list does too.
 const byYear = new Map<number, ListPost[]>();
 for (const post of posts) {
-  const year = new Date(post.date).getUTCFullYear();
+  const year = calendarYear(post.date);
   byYear.set(year, [...(byYear.get(year) ?? []), post]);
 }
 const years = [...byYear.keys()].sort((a, b) => b - a);

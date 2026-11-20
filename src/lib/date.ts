@@ -17,8 +17,14 @@ const LONG_DE = new Intl.DateTimeFormat("de-DE", {
   timeZone: "UTC",
 });
 
+// The day as picked in Contentful. "2026-11-18T00:30+01:00" is 17 November in
+// UTC, so the offset is dropped rather than converted.
+function calendarDay(dateString: string): Date {
+  return new Date(dateString.slice(0, 10));
+}
+
 export function formatLongDate(dateString: string, german = false): string {
-  return (german ? LONG_DE : LONG).format(new Date(dateString));
+  return (german ? LONG_DE : LONG).format(calendarDay(dateString));
 }
 
 // Archive rows, where the year heading carries the year.
@@ -29,5 +35,9 @@ const DAY_MONTH = new Intl.DateTimeFormat(DEFAULT_LOCALE, {
 });
 
 export function formatDayMonth(dateString: string): string {
-  return DAY_MONTH.format(new Date(dateString));
+  return DAY_MONTH.format(calendarDay(dateString));
+}
+
+export function calendarYear(dateString: string): number {
+  return calendarDay(dateString).getUTCFullYear();
 }

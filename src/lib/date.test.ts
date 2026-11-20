@@ -1,5 +1,5 @@
 import { describe, expect, it } from "vitest";
-import { formatDayMonth, formatLongDate } from "./date";
+import { calendarYear, formatDayMonth, formatLongDate } from "./date";
 
 describe("dates", () => {
   it("are British by default: day, month in words, year", () => {
@@ -27,5 +27,20 @@ describe("dates", () => {
     } finally {
       process.env.TZ = zone;
     }
+  });
+
+  it("show the day picked in Contentful, not the day in UTC", () => {
+    // Just after midnight in Berlin is still the previous day in UTC.
+    expect(formatLongDate("2026-11-18T00:30+01:00")).toBe("18 November 2026");
+    expect(formatLongDate("2026-11-18T00:30+01:00", true)).toBe(
+      "18. November 2026",
+    );
+    expect(formatDayMonth("2026-07-01T01:30+02:00")).toBe("1 Jul");
+    expect(calendarYear("2027-01-01T00:30+01:00")).toBe(2027);
+  });
+
+  it("leave an evening post on its own day", () => {
+    expect(formatLongDate("2026-11-18T22:00+01:00")).toBe("18 November 2026");
+    expect(calendarYear("2026-12-31T23:30+01:00")).toBe(2026);
   });
 });

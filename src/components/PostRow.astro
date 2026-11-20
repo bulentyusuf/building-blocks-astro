@@ -1,7 +1,7 @@
 ---
 import StrandPill from "./StrandPill.astro";
 import { GERMAN_LOCALE } from "../lib/constants";
-import { formatDayMonth, formatLongDate } from "../lib/date";
+import { calendarYear, formatDayMonth, formatLongDate } from "../lib/date";
 import { strandFor } from "../lib/strands";
 import type { ListPost } from "../lib/types";
 import { widont } from "../lib/typography";
@@ -38,7 +38,7 @@ const strand = showStrand ? strandFor(post.category) : undefined;
     {
       // The heading carries the year; restore it for link navigation.
       date === "dayMonth" && (
-        <span class="sr-only"> {new Date(post.date).getUTCFullYear()}</span>
+        <span class="sr-only"> {calendarYear(post.date)}</span>
       )
     }
   </span>
