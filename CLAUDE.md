@@ -188,5 +188,8 @@ block 2`), or a code block's filename.
   After formatting a template, check the page: whitespace there is content.
 - **Tests check behaviour**, and a pattern-matching guard keeps a known-bad
   control beside it. Do not weaken a guard to make a change pass.
+- **Test what a look at the page would miss**: server code, publishing,
+  feeds, metadata and accessibility. Layout and on-page behaviour are checked
+  by eye, so do not add tests for them.
 - Spelling follows `DEFAULT_LOCALE`, here British. Comments are one or two lines
   and say only what the code cannot. Conventional commits, one concern per pull request.
