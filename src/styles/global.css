@@ -72,7 +72,7 @@
   --color-code-ink: #1a5e33;
 
   /* Tables: edge and header rule at 28% of the crimson, row rules at 18%, the
-     header fill at 12%. color-mix, so all three follow the token into dark. */
+     header fill at 12%. Dark swaps in neutral values, as crimson turns brown. */
   --color-table-edge: color-mix(
     in srgb,
     var(--color-brand-crimson) 28%,
@@ -104,6 +104,9 @@
     --color-brand-crimson: #f594a4;
     --color-hairline: rgb(237 237 238 / 0.15);
     --color-cover-keyline: rgb(237 237 238 / 0.18);
+    --color-table-edge: rgb(237 237 238 / 0.18);
+    --color-table-rule: rgb(237 237 238 / 0.1);
+    --color-table-header: rgb(237 237 238 / 0.06);
     --color-card: #242327;
     /* The code theme's ground, so a code block's bar and body match. */
     --color-surface-dark: #1f1f1f;

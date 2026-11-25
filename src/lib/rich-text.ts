@@ -29,12 +29,12 @@ function plainText(node: RichNode): string {
 // A column is numeric when every body cell is a number or a placeholder dash,
 // and at least one is a number. Numeric columns right-align in tabular figures,
 // header included. Per column, because alignment is a column property.
-const NUMERIC_CELL = /^[#£$€]?\d[\d,]*(\.\d+)?%?$/;
+const NUMERIC_CELL = /^[+\-−]?[#£$€]?\d[\d,]*(\.\d+)?%?$/;
 const PLACEHOLDER_CELL = /^[-–—]?$/;
 
-// A column of bare numbers takes the narrowest width instead of an equal share
-// of the table. Per column, so one longer value keeps the column normal.
-const SHORT_CELL = /^\d+(\.\d+)?$/;
+// A column of bare numbers or percentages, signed or not, takes the narrowest
+// width instead of an equal share. Per column, so one longer value keeps it normal.
+const SHORT_CELL = /^[+\-−]?\d+(\.\d+)?%?$/;
 
 export function numericColumns(table: RichNode): boolean[] {
   return matchingColumns(table, NUMERIC_CELL);
@@ -273,13 +273,12 @@ export function renderRichText({
             const cells = (row.content as Block[])
               .map((cell, i) => {
                 const flag = attributes({ "data-numeric": numeric[i] });
+                const narrow = short[i] ? " w-[1%] whitespace-nowrap" : "";
                 // Contentful puts header cells only in the first row, so
                 // scope=col is right.
                 if (cell.nodeType === BLOCKS.TABLE_HEADER_CELL) {
-                  return `<th scope="col"${flag} class="border-b border-table-edge bg-table-header px-3 py-3 text-start font-semibold data-numeric:text-end">${next(cell.content)}</th>`;
+                  return `<th scope="col"${flag} class="border-b border-table-edge bg-table-header px-3 py-3 text-start font-semibold data-numeric:text-end${narrow}">${next(cell.content)}</th>`;
                 }
-                // Body cells only, so a long header can still wrap.
-                const narrow = short[i] ? " w-[1%] whitespace-nowrap" : "";
                 return `<td${flag} class="px-3 py-3 text-start align-top data-numeric:text-end data-numeric:tabular-nums${narrow}">${next(cell.content)}</td>`;
               })
               .join("");
