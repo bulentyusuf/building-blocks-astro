@@ -9,9 +9,15 @@ const WIDTHS = [384, 640, 750, 828, 1080, 1200, 1920];
 /** Nothing enlarges past this: it is the widest file the srcset offers. */
 export const WIDEST_SERVED_FILE = WIDTHS[WIDTHS.length - 1];
 
-// Only `w`, `q` and `fm=webp`: cropping is CSS-side. Another host's URL passes
+export type ImageFormat = "webp" | "avif";
+
+// Only `w`, `q` and `fm`: cropping is CSS-side. Another host's URL passes
 // through untouched.
-export function contentfulSrc(src: string, width: number): string {
+export function contentfulSrc(
+  src: string,
+  width: number,
+  format: ImageFormat = "webp",
+): string {
   // A //host address would follow the page's scheme, and http breaks the CSP.
   const absolute = src.startsWith("//") ? `https:${src}` : src;
   try {
@@ -19,7 +25,7 @@ export function contentfulSrc(src: string, width: number): string {
   } catch {
     return src;
   }
-  return `${absolute}?w=${width}&q=75&fm=webp`;
+  return `${absolute}?w=${width}&q=75&fm=${format}`;
 }
 
 /** A square JPEG cut from a Contentful image, for a link preview, which may
@@ -47,6 +53,18 @@ export function responsiveSource(src: string, sizes: string): ImageSource {
     srcset: WIDTHS.map((w) => `${contentfulSrc(src, w)} ${w}w`).join(", "),
     sizes,
   };
+}
+
+/** The same widths as AVIF, offered ahead of the WebP set on covers and cards.
+ *  Undefined for another host, whose file is whatever it is. */
+export function avifSrcset(src: string): string | undefined {
+  const absolute = src.startsWith("//") ? `https:${src}` : src;
+  try {
+    if (new URL(absolute).hostname !== CONTENTFUL_IMAGE_HOST) return undefined;
+  } catch {
+    return undefined;
+  }
+  return WIDTHS.map((w) => `${contentfulSrc(src, w, "avif")} ${w}w`).join(", ");
 }
 
 /** A fixed-size image, such as a portrait: one file per pixel density. */
