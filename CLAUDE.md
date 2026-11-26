@@ -142,6 +142,9 @@ can. No UI framework ships to the browser.
   `--font-mono` (IBM Plex Mono). Never `font-sans`.
 - **Fonts are self-hosted, Latin only**, through Astro's fonts config. Do not
   add `latin-ext`, including for German. The italic is not preloaded.
+- **Literata is a trimmed copy in `src/assets/fonts`**, weights 400 to 700 and
+  optical sizes 12 to 36. Body text needing more gets a new trim, never the
+  full package file.
 - **Never measure a prose column in `ch`.** The measure lives on the column's
   parent, in rem.
 - **`@utility prose` carries `overflow-wrap: break-word`.** Do not narrow it

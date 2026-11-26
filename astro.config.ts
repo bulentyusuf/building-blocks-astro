@@ -53,9 +53,8 @@ export default defineConfig({
     ogCards(),
     searchIndex(),
   ],
-  // Self-hosted from the installed font packages, so a build needs no font
-  // service. Latin only. The variable faces carry their whole weight range and
-  // the optical-size axis in one file per style.
+  // Self-hosted, so a build needs no font service. Latin only. Each variable
+  // face carries its weight range and the optical-size axis in one file per style.
   fonts: [
     {
       provider: fontProviders.local(),
@@ -76,23 +75,21 @@ export default defineConfig({
     },
     {
       provider: fontProviders.local(),
+      // Trimmed from the package to weights 400 to 700 and optical sizes 12 to
+      // 36, the range body text uses. Replacing it with the full file adds 100 KiB.
       name: "Literata",
       cssVariable: "--font-literata",
       fallbacks: ["serif"],
       options: {
         variants: [
           {
-            src: [
-              `${variable}/literata/files/literata-latin-opsz-normal.woff2`,
-            ],
-            weight: "200 900",
+            src: ["./src/assets/fonts/literata-latin-opsz-normal.woff2"],
+            weight: "400 700",
             style: "normal",
           },
           {
-            src: [
-              `${variable}/literata/files/literata-latin-opsz-italic.woff2`,
-            ],
-            weight: "200 900",
+            src: ["./src/assets/fonts/literata-latin-opsz-italic.woff2"],
+            weight: "400 700",
             style: "italic",
           },
         ],

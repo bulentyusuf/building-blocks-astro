@@ -5,6 +5,7 @@
 @source not "../../CLAUDE.md";
 @source not "../../README.md";
 @source not "../../.claude";
+@source not "../assets/fonts";
 
 @plugin '@tailwindcss/typography';
 
