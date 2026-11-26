@@ -129,8 +129,9 @@ can. No UI framework ships to the browser.
 - **Posts carry `authors`, an ordered list capped at three.** `MAX_AUTHORS`,
   the GraphQL limit and the Contentful validation move together.
 - **Images are plain `<img>` elements on Contentful's image CDN.** Only `w`,
-  `q` and `fm=webp` are passed. Cropping is CSS-side. Nothing is processed at
-  build.
+  `q` and `fm` are passed. Covers and cards add an AVIF `<source>` in a
+  `<picture>`, with WebP as the fallback. Portraits stay WebP. Cropping is
+  CSS-side. Nothing is processed at build.
 - **Every rich-text field renders through `renderRichText`**, and every
   hyperlink in it through `resolveHyperlink`. Do not copy either.
 
