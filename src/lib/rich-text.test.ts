@@ -414,14 +414,38 @@ describe("tables", () => {
   const row = (...cells: unknown[]) => block("table-row", ...cells);
   const table = block(
     "table",
-    row(head("Name"), head("Score"), head("Share"), head("Rank")),
-    row(cell("First entry"), cell("1,200"), cell("45%"), cell("1")),
-    row(cell("Second"), cell("—"), cell("£3.50"), cell("12")),
+    row(
+      head("Name"),
+      head("Score"),
+      head("Share"),
+      head("Rank"),
+      head("Change"),
+    ),
+    row(
+      cell("First entry"),
+      cell("1,200"),
+      cell("45%"),
+      cell("1"),
+      cell("-100%"),
+    ),
+    row(cell("Second"), cell("—"), cell("£3.50"), cell("12"), cell("+2%")),
   );
 
   it("flags each column of numbers and placeholders, never one with a word", () => {
-    expect(numericColumns(table as never)).toEqual([false, true, true, true]);
-    expect(shortColumns(table as never)).toEqual([false, false, false, true]);
+    expect(numericColumns(table as never)).toEqual([
+      false,
+      true,
+      true,
+      true,
+      true,
+    ]);
+    expect(shortColumns(table as never)).toEqual([
+      false,
+      false,
+      false,
+      true,
+      true,
+    ]);
   });
 
   it("does not flag a column of placeholders alone", () => {
@@ -436,15 +460,15 @@ describe("tables", () => {
 
   it("marks every cell of a numeric column, header included, and no other", () => {
     const html = render(doc(table, table));
-    expect(html.match(/<th scope="col" data-numeric/g)).toHaveLength(6);
-    expect(html.match(/<td data-numeric/g)).toHaveLength(12);
+    expect(html.match(/<th scope="col" data-numeric/g)).toHaveLength(8);
+    expect(html.match(/<td data-numeric/g)).toHaveLength(16);
     expect(html.match(/<th scope="col" class/g)).toHaveLength(2);
   });
 
-  it("narrows the body cells of a short column and never its header", () => {
+  it("narrows every cell of a short column, header included, and no other", () => {
     const html = render(doc(table));
-    expect(html.match(/<td[^>]*whitespace-nowrap/g)).toHaveLength(2);
-    expect(html).not.toMatch(/<th[^>]*whitespace-nowrap/);
+    expect(html.match(/<td[^>]*whitespace-nowrap/g)).toHaveLength(4);
+    expect(html.match(/<th[^>]*whitespace-nowrap/g)).toHaveLength(2);
   });
 
   it("names each scroll region by its position", () => {
